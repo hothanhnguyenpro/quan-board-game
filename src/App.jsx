@@ -1,52 +1,157 @@
-import React, { useState, useEffect } from 'react';
+import React, {
+  useEffect,
+  useState,
+} from 'react';
+
 import Library from './components/Library';
 import CheatSheet from './components/CheatSheet';
 import { fetchGameData } from './utils/dataFetcher';
 
-function App() {
+const App = () => {
   const [games, setGames] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [filter, setFilter] = useState({});
-  const [selectedGame, setSelectedGame] = useState(null);
+  const [selectedGame, setSelectedGame] =
+    useState(null);
 
   useEffect(() => {
+    let cancelled = false;
+
     const loadData = async () => {
       try {
-        const data = await fetchGameData();
+        setLoading(true);
+        setError(null);
+
+        const data =
+          await fetchGameData();
+
+        if (cancelled) {
+          return;
+        }
+
         setGames(data);
       } catch (err) {
-        console.error("Lỗi:", err);
+        if (cancelled) {
+          return;
+        }
+
+        console.error(
+          '[App] Lỗi tải dữ liệu:',
+          err
+        );
+
+        setError(
+          err instanceof Error
+            ? err.message
+            : 'Không thể tải dữ liệu game.'
+        );
       } finally {
-        // Bắt buộc tắt loading
-        setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
     };
+
     loadData();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
+
+  const handleFilterChange =
+    (newFilter) => {
+      setFilter(
+        newFilter || {}
+      );
+    };
+
+  const handleSelectGame =
+    (game) => {
+      setSelectedGame(game);
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth',
+      });
+    };
+
+  const handleBackToLibrary =
+    () => {
+      setSelectedGame(null);
+      window.scrollTo({
+        top: 0,
+        behavior: 'instant',
+      });
+    };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-950 flex flex-col items-center justify-center text-white">
-        <div className="w-10 h-10 border-4 border-yellow-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-        <p className="text-gray-400 font-medium">Đang tải tủ board game...</p>
+      <div className="app-state">
+        <div className="loading-mark">
+          <div className="loading-spinner" />
+        </div>
+
+        <h1>
+          Đang mở tủ game
+        </h1>
+
+        <p>
+          Đang tải danh sách game...
+        </p>
+      </div>
+    );
+  }
+
+  if (error && !games.length) {
+    return (
+      <div className="app-state">
+        <div className="state-icon">
+          ⚠️
+        </div>
+
+        <h1>
+          Không thể tải tủ game
+        </h1>
+
+        <p>{error}</p>
+
+        <button
+          type="button"
+          className="state-button"
+          onClick={() =>
+            window.location.reload()
+          }
+        >
+          Thử lại
+        </button>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white font-sans">
+    <div className="app-root">
       {selectedGame ? (
-        <CheatSheet game={selectedGame} onBack={() => setSelectedGame(null)} />
+        <CheatSheet
+          game={selectedGame}
+          onBack={
+            handleBackToLibrary
+          }
+        />
       ) : (
-        <Library 
-          games={games} 
-          filter={filter} 
-          onFilterChange={setFilter} 
-          onSelectGame={setSelectedGame}
+        <Library
+          games={games}
+          filter={filter}
+          onFilterChange={
+            handleFilterChange
+          }
+          onSelectGame={
+            handleSelectGame
+          }
         />
       )}
     </div>
   );
-}
+};
 
 export default App;

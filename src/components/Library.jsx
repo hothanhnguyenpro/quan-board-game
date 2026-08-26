@@ -1,6 +1,11 @@
-import React, { useMemo, useState } from 'react';
+import {
+  useMemo,
+  useState,
+} from 'react';
+
 import GameCard from './GameCard.jsx';
 import FilterSheet from './FilterSheet.jsx';
+
 import {
   Search,
   SlidersHorizontal,
@@ -9,23 +14,45 @@ import {
 } from 'lucide-react';
 
 const SHELF_ROWS = 4;
-const SHELF_HEIGHT = 235;
-const CARD_GAP = 4;
 
-/* =========================
-   NORMALIZE
-   ========================= */
+/* =========================================================
+   NORMALIZE TEXT
+   ========================================================= */
 
 const normalizeText = (value) => {
   return String(value ?? '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[đĐ]/g, 'd')
+    .replace(/[–—−]/g, '-')
+    .replace(/\s+đến\s+/gi, '-')
+    .replace(/\s+den\s+/gi, '-')
     .trim()
     .replace(/\s+/g, ' ')
     .toLowerCase();
 };
 
-/* =========================
-   PARSE PLAYER RANGE
-   ========================= */
+/* =========================================================
+   PLAYER RANGE
+   ========================================================= */
+
+/*
+  Ví dụ hỗ trợ:
+
+  "2"
+  "2-5"
+  "2 – 5"
+  "2—5"
+  "2 - 5"
+  "2 đến 5"
+  "2 den 5"
+  "2-5 người"
+  "Không giới hạn"
+
+  Kết quả:
+
+  "2-5" -> { min: 2, max: 5 }
+*/
 
 const parsePlayerRange = (value) => {
   const text = normalizeText(value);
@@ -34,28 +61,22 @@ const parsePlayerRange = (value) => {
     return null;
   }
 
-  // Không giới hạn
+  /* Không giới hạn */
+
   if (
-    text.includes('không giới hạn') ||
-    text.includes('không hạn chế') ||
+    text.includes('khong gioi han') ||
+    text.includes('khong han che') ||
     text.includes('unlimited')
   ) {
     return {
-      min: 0,
+      min: 1,
       max: Infinity,
     };
   }
 
-  // Hỗ trợ cả:
-  // 2-5
-  // 2 – 5
-  // 2 — 5
-  // 2 đến 5
-  const normalizedRange = text
-    .replace(/[–—]/g, '-')
-    .replace(/\s+đến\s+/g, '-');
+  /* Lấy các số */
 
-  const numbers = normalizedRange.match(/\d+/g);
+  const numbers = text.match(/\d+/g);
 
   if (!numbers || numbers.length === 0) {
     return null;
@@ -82,91 +103,96 @@ const parsePlayerRange = (value) => {
   };
 };
 
-/* =========================
+/* =========================================================
    PLAYER FILTER
-   ========================= */
+   ========================================================= */
+
+/*
+  Quy tắc:
+
+  1-4
+    2       ✅
+    3-4     ✅
+    Nhóm đông ❌
+
+  2-5
+    2       ✅
+    3-4     ✅
+    Nhóm đông ✅
+
+  3-6
+    2       ❌
+    3-4     ✅
+    Nhóm đông ✅
+
+  5-10
+    2       ❌
+    3-4     ❌
+    Nhóm đông ✅
+
+  2-10
+    2       ✅
+    3-4     ✅
+    Nhóm đông ✅
+*/
 
 const matchesPlayerFilter = (
-  players,
+  gamePlayers,
   selectedFilter
 ) => {
-  const normalizedFilter =
-    normalizeText(selectedFilter);
-
-  if (!normalizedFilter) {
+  if (!selectedFilter) {
     return true;
   }
 
-  const range = parsePlayerRange(players);
+  const range =
+    parsePlayerRange(gamePlayers);
 
   if (!range) {
     return false;
   }
 
-  /*
-   * 2 NGƯỜI
-   *
-   * 2-5  ✅
-   * 2-10 ✅
-   * 1-4  ✅
-   * 3-5  ❌
-   */
-  if (normalizedFilter === '2') {
+  const filter =
+    normalizeText(selectedFilter);
+
+  /* 2 người */
+
+  if (filter === '2') {
     return (
       range.min <= 2 &&
       range.max >= 2
     );
   }
 
-  /*
-   * 3-4 NGƯỜI
-   *
-   * 2-5  ✅
-   * 3-4  ✅
-   * 3-6  ✅
-   * 4-8  ✅
-   * 1-4  ✅
-   * 5-10 ❌
-   */
-  if (normalizedFilter === '3-4') {
+  /* 3-4 người */
+
+  if (filter === '3-4') {
     return (
-      range.max >= 3 &&
-      range.min <= 4
+      range.min <= 4 &&
+      range.max >= 3
     );
   }
 
   /*
-   * NHÓM ĐÔNG
-   *
-   * Chỉ những game có thể chơi
-   * với ÍT NHẤT 5 người mới được vào đây.
-   *
-   * 1-4   ❌
-   * 2-4   ❌
-   * 2-5   ✅
-   * 2-10  ✅
-   * 3-7   ✅
-   * 4-8   ✅
-   * 5-10  ✅
-   */
-  if (
-    normalizedFilter === 'nhóm đông'
-  ) {
+    Nhóm đông:
+
+    CHỈ game có max >= 5.
+  */
+
+  if (filter === 'nhom dong') {
     return range.max >= 5;
   }
 
   /*
-   * Nếu filter không hợp lệ,
-   * KHÔNG được cho tất cả game đi qua.
-   *
-   * Đây là điểm đã gây lỗi trước đó.
-   */
+    Filter lạ/không hợp lệ:
+    không cho game lọt qua.
+  */
+
   return false;
 };
 
-/* =========================
-   PARSE TIME RANGE
-   ========================= */
+/* =========================================================
+   TIME RANGE
+   ========================================================= */
 
 const parseTimeRange = (value) => {
   const text = normalizeText(value);
@@ -175,12 +201,7 @@ const parseTimeRange = (value) => {
     return null;
   }
 
-  const normalized = text
-    .replace(/[–—]/g, '-')
-    .replace(/\s+đến\s+/g, '-');
-
-  const numbers =
-    normalized.match(/\d+/g);
+  const numbers = text.match(/\d+/g);
 
   if (!numbers || numbers.length === 0) {
     return null;
@@ -190,6 +211,15 @@ const parseTimeRange = (value) => {
 
   if (!Number.isFinite(first)) {
     return null;
+  }
+
+  /* <15 phút -> 0-14 */
+
+  if (text.startsWith('<')) {
+    return {
+      min: 0,
+      max: Math.max(0, first - 1),
+    };
   }
 
   const second =
@@ -204,49 +234,49 @@ const parseTimeRange = (value) => {
   return {
     min: Math.min(first, second),
     max: Math.max(first, second),
-    raw: normalized,
   };
 };
 
-/* =========================
+/* =========================================================
    TIME FILTER
-   ========================= */
+   ========================================================= */
 
 const matchesTimeFilter = (
   gameTime,
   selectedFilter
 ) => {
-  const normalizedFilter =
-    normalizeText(selectedFilter);
-
-  if (!normalizedFilter) {
+  if (!selectedFilter) {
     return true;
   }
 
-  const range = parseTimeRange(gameTime);
+  const range =
+    parseTimeRange(gameTime);
 
   if (!range) {
     return false;
   }
 
-  if (
-    normalizedFilter === '<15 phút'
-  ) {
-    return range.min < 15;
+  const filter =
+    normalizeText(selectedFilter);
+
+  /* <15 phút */
+
+  if (filter === '<15 phut') {
+    return range.max < 15;
   }
 
-  if (
-    normalizedFilter === '30-60 phút'
-  ) {
+  /* 30-60 phút */
+
+  if (filter === '30-60 phut') {
     return (
       range.max >= 30 &&
       range.min <= 60
     );
   }
 
-  if (
-    normalizedFilter === '45-90 phút'
-  ) {
+  /* 45-90 phút */
+
+  if (filter === '45-90 phut') {
     return (
       range.max >= 45 &&
       range.min <= 90
@@ -256,25 +286,53 @@ const matchesTimeFilter = (
   return false;
 };
 
-/* =========================
-   SHELF CREATION
-   ========================= */
+/* =========================================================
+   SEARCH
+   ========================================================= */
 
-const createShelves = (
-  games,
-  rowCount
+const matchesSearch = (
+  game,
+  query
 ) => {
+  const normalizedQuery =
+    normalizeText(query);
+
+  if (!normalizedQuery) {
+    return true;
+  }
+
+  const name =
+    normalizeText(game?.name);
+
+  const alias =
+    normalizeText(game?.alias);
+
+  return (
+    name.startsWith(
+      normalizedQuery
+    ) ||
+    alias.startsWith(
+      normalizedQuery
+    )
+  );
+};
+
+/* =========================================================
+   SHELVES
+   ========================================================= */
+
+const createShelves = (games) => {
   if (!games.length) {
     return [];
   }
 
-  const totalRows = Math.min(
-    rowCount,
+  const rowCount = Math.min(
+    SHELF_ROWS,
     games.length
   );
 
   const itemsPerRow = Math.ceil(
-    games.length / totalRows
+    games.length / rowCount
   );
 
   const rows = [];
@@ -295,9 +353,9 @@ const createShelves = (
   return rows;
 };
 
-/* =========================
+/* =========================================================
    LIBRARY
-   ========================= */
+   ========================================================= */
 
 const Library = ({
   games = [],
@@ -315,30 +373,28 @@ const Library = ({
     setSearchQuery,
   ] = useState('');
 
-  /* =========================
-     FILTER GAMES
-     ========================= */
+  /* =======================================================
+     FILTERED GAMES
+     ======================================================= */
 
   const filteredGames = useMemo(() => {
-    const query = normalizeText(
-      searchQuery
-    );
-
     return games.filter((game) => {
-      /* SEARCH */
-
-      const gameName = normalizeText(
-        game?.name
-      );
+      /* ---------------------------------------------
+         1. SEARCH
+         --------------------------------------------- */
 
       if (
-        query &&
-        !gameName.startsWith(query)
+        !matchesSearch(
+          game,
+          searchQuery
+        )
       ) {
         return false;
       }
 
-      /* TIME */
+      /* ---------------------------------------------
+         2. TIME
+         --------------------------------------------- */
 
       if (
         filter?.time &&
@@ -350,7 +406,9 @@ const Library = ({
         return false;
       }
 
-      /* PLAYERS */
+      /* ---------------------------------------------
+         3. PLAYERS
+         --------------------------------------------- */
 
       if (
         filter?.players &&
@@ -371,20 +429,18 @@ const Library = ({
     searchQuery,
   ]);
 
-  /* =========================
+  /* =======================================================
      SHELVES
-     ========================= */
+     ======================================================= */
 
-  const shelves = useMemo(() => {
-    return createShelves(
-      filteredGames,
-      SHELF_ROWS
-    );
-  }, [filteredGames]);
+  const shelves = useMemo(
+    () => createShelves(filteredGames),
+    [filteredGames]
+  );
 
-  /* =========================
+  /* =======================================================
      ACTIVE FILTER
-     ========================= */
+     ======================================================= */
 
   const hasActiveFilter =
     Boolean(
@@ -393,159 +449,75 @@ const Library = ({
         searchQuery.trim()
     );
 
-  /* =========================
-     CLEAR
-     ========================= */
+  /* =======================================================
+     CLEAR ALL
+     ======================================================= */
 
   const clearAll = () => {
     setSearchQuery('');
     onFilterChange?.({});
   };
 
-  /* =========================
-     CLICK GAME
-     ========================= */
-
-  const handleGameClick = (game) => {
-    if (onSelectGame) {
-      onSelectGame(game);
-    }
-  };
+  /* =======================================================
+     RENDER
+     ======================================================= */
 
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        boxSizing: 'border-box',
-        padding: '18px 12px 105px',
-        color: '#f4f4f5',
-        background:
-          'radial-gradient(circle at top, #252321 0%, #151414 38%, #0b0c0e 100%)',
-      }}
-    >
-      <div
-        style={{
-          width:
-            'min(1180px, 100%)',
-          margin: '0 auto',
-        }}
-      >
+    <main className="library-page">
+      <div className="library-shell">
+
         {/* HEADER */}
 
-        <header
-          style={{
-            textAlign: 'center',
-            marginBottom: 18,
-          }}
-        >
+        <header className="library-header">
           <img
             src="/logo.png"
             alt="Logo quán"
-            style={{
-              height: 56,
-              maxWidth: '70vw',
-              margin:
-                '0 auto 12px',
-              display: 'block',
-              objectFit: 'contain',
-            }}
+            className="library-logo"
           />
 
-          <h1
-            style={{
-              margin:
-                '8px 0 14px',
-              fontSize:
-                'clamp(34px, 6vw, 58px)',
-              lineHeight: 1,
-              fontWeight: 800,
-              letterSpacing:
-                '-0.04em',
-              color: '#f4f4f5',
-            }}
-          >
-            Tủ Board Game
+          <p className="eyebrow">
+            BOARD GAME CAFE
+          </p>
+
+          <h1>
+            Tìm game cho bàn của bạn
           </h1>
+
+          <p className="library-subtitle">
+            Chọn số người, thời gian
+            hoặc tìm thẳng tên game.
+          </p>
 
           {/* SEARCH */}
 
-          <div
-            style={{
-              position: 'relative',
-              width:
-                'min(440px, 92vw)',
-              margin: '0 auto',
-            }}
-          >
+          <div className="search-wrap">
             <Search
-              size={20}
-              strokeWidth={2.2}
-              style={{
-                position:
-                  'absolute',
-                left: 14,
-                top: '50%',
-                transform:
-                  'translateY(-50%)',
-                color: '#a1a1aa',
-                pointerEvents:
-                  'none',
-              }}
+              size={19}
+              className="search-icon"
             />
 
             <input
-              type="text"
+              type="search"
               value={searchQuery}
               onChange={(event) =>
                 setSearchQuery(
                   event.target.value
                 )
               }
-              placeholder="Nhập tên game (ví dụ: s, oc)"
-              aria-label="Tìm kiếm game theo tên"
-              style={{
-                width: '100%',
-                height: 48,
-                boxSizing:
-                  'border-box',
-                padding:
-                  '0 44px 0 42px',
-                borderRadius: 14,
-                border:
-                  '1px solid rgba(255,255,255,.11)',
-                outline: 'none',
-                color: '#f4f4f5',
-                background:
-                  'rgba(24,25,29,.96)',
-                boxShadow:
-                  'inset 0 1px 0 rgba(255,255,255,.035), 0 8px 26px rgba(0,0,0,.22)',
-              }}
+              placeholder="Tìm tên game..."
+              aria-label="Tìm tên game"
+              autoComplete="off"
+              spellCheck="false"
             />
 
             {searchQuery && (
               <button
                 type="button"
+                className="search-clear"
                 onClick={() =>
                   setSearchQuery('')
                 }
                 aria-label="Xóa tìm kiếm"
-                style={{
-                  position:
-                    'absolute',
-                  right: 8,
-                  top: 8,
-                  width: 32,
-                  height: 32,
-                  display: 'grid',
-                  placeItems:
-                    'center',
-                  border: 0,
-                  borderRadius: 10,
-                  background:
-                    'rgba(255,255,255,.07)',
-                  color: '#d4d4d8',
-                  cursor: 'pointer',
-                }}
               >
                 <X size={16} />
               </button>
@@ -553,34 +525,36 @@ const Library = ({
           </div>
         </header>
 
+        {/* RESULT SUMMARY */}
+
+        <div className="library-summary">
+          <div>
+            {hasActiveFilter
+              ? `${filteredGames.length} game phù hợp`
+              : `${games.length} game trong tủ`}
+          </div>
+
+          {hasActiveFilter && (
+            <button
+              type="button"
+              className="summary-clear"
+              onClick={clearAll}
+            >
+              <RotateCcw size={14} />
+              Xóa lọc
+            </button>
+          )}
+        </div>
+
         {/* CABINET */}
 
         <section
+          className="cabinet"
           aria-label="Tủ board game"
-          style={{
-            position: 'relative',
-            overflow: 'hidden',
-            borderRadius: 12,
-            border:
-              '1px solid rgba(255,255,255,.11)',
-            background:
-              'linear-gradient(180deg, #292725 0%, #191817 9%, #0f1012 100%)',
-            boxShadow:
-              '0 24px 70px rgba(0,0,0,.52), inset 0 1px 0 rgba(255,255,255,.05)',
-          }}
         >
           <div
+            className="cabinet-glow"
             aria-hidden="true"
-            style={{
-              position:
-                'absolute',
-              inset: 0,
-              pointerEvents:
-                'none',
-              zIndex: 20,
-              background:
-                'linear-gradient(90deg, rgba(255,255,255,.045), transparent 6%, transparent 94%, rgba(0,0,0,.20))',
-            }}
           />
 
           {shelves.map(
@@ -589,220 +563,71 @@ const Library = ({
               shelfIndex
             ) => (
               <div
-                key={
-                  `shelf-${shelfIndex}`
-                }
-                style={{
-                  position:
-                    'relative',
-                  height:
-                    SHELF_HEIGHT,
-                  minHeight:
-                    SHELF_HEIGHT,
-                  display: 'flex',
-                  alignItems:
-                    'flex-end',
-                  gap: CARD_GAP,
-                  overflowX:
-                    'auto',
-                  overflowY:
-                    'hidden',
-                  boxSizing:
-                    'border-box',
-                  padding:
-                    '12px 14px 17px',
-                  scrollbarWidth:
-                    'thin',
-                  borderBottom:
-                    shelfIndex ===
-                    shelves.length - 1
-                      ? 'none'
-                      : '1px solid rgba(0,0,0,.8)',
-                  background:
-                    shelfIndex % 2 === 0
-                      ? 'linear-gradient(180deg, rgba(255,255,255,.018), rgba(0,0,0,.14))'
-                      : 'linear-gradient(180deg, rgba(0,0,0,.08), rgba(255,255,255,.012))',
-                }}
+                key={`shelf-${shelfIndex}`}
+                className="cabinet-shelf"
               >
                 <div
+                  className="cabinet-side-left"
                   aria-hidden="true"
-                  style={{
-                    position:
-                      'absolute',
-                    top: 0,
-                    left: 0,
-                    width: 8,
-                    height:
-                      '100%',
-                    background:
-                      'linear-gradient(90deg, rgba(0,0,0,.24), transparent)',
-                    pointerEvents:
-                      'none',
-                    zIndex: 5,
-                  }}
                 />
 
                 <div
+                  className="cabinet-side-right"
                   aria-hidden="true"
-                  style={{
-                    position:
-                      'absolute',
-                    top: 0,
-                    right: 0,
-                    width: 8,
-                    height:
-                      '100%',
-                    background:
-                      'linear-gradient(270deg, rgba(0,0,0,.24), transparent)',
-                    pointerEvents:
-                      'none',
-                    zIndex: 5,
-                  }}
                 />
 
-                {shelfGames.map(
-                  (game) => (
-                    <div
-                      key={game.id}
-                      style={{
-                        flex:
-                          '0 0 auto',
-                        width:
-                          'max-content',
-                        height:
-                          '100%',
-                        display:
-                          'flex',
-                        alignItems:
-                          'flex-end',
-                        justifyContent:
-                          'center',
-                        position:
-                          'relative',
-                        zIndex: 2,
-                      }}
-                    >
-                      <GameCard
-                        game={game}
-                        onClick={() =>
-                          handleGameClick(
-                            game
-                          )
-                        }
-                      />
-                    </div>
-                  )
-                )}
+                <div className="games-row">
+                  {shelfGames.map(
+                    (game) => (
+                      <div
+                        key={game.id}
+                        className="game-slot"
+                      >
+                        <GameCard
+                          game={game}
+                          onClick={() =>
+                            onSelectGame?.(
+                              game
+                            )
+                          }
+                        />
+                      </div>
+                    )
+                  )}
+                </div>
 
                 <div
+                  className="shelf-board"
                   aria-hidden="true"
-                  style={{
-                    position:
-                      'absolute',
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    height: 17,
-                    zIndex: 8,
-                    background:
-                      'linear-gradient(180deg, #51463a 0%, #322a23 38%, #171412 100%)',
-                    boxShadow:
-                      '0 -3px 8px rgba(0,0,0,.34), 0 7px 14px rgba(0,0,0,.50)',
-                    pointerEvents:
-                      'none',
-                  }}
-                />
-
-                <div
-                  aria-hidden="true"
-                  style={{
-                    position:
-                      'absolute',
-                    left: 0,
-                    right: 0,
-                    bottom: 15,
-                    height: 2,
-                    zIndex: 9,
-                    background:
-                      'rgba(255,255,255,.07)',
-                    pointerEvents:
-                      'none',
-                  }}
                 />
               </div>
             )
           )}
 
+          {/* EMPTY STATE */}
+
           {!filteredGames.length && (
-            <div
-              style={{
-                minHeight: 360,
-                display: 'grid',
-                placeItems:
-                  'center',
-                padding:
-                  '40px 20px',
-                textAlign:
-                  'center',
-              }}
-            >
-              <div>
-                <div
-                  style={{
-                    fontSize: 18,
-                    fontWeight: 800,
-                    color:
-                      '#e4e4e7',
-                    marginBottom: 8,
-                  }}
-                >
-                  Không tìm thấy
-                  game phù hợp
-                </div>
-
-                <div
-                  style={{
-                    fontSize: 14,
-                    color:
-                      '#a1a1aa',
-                  }}
-                >
-                  Thử đổi từ khóa
-                  hoặc bộ lọc.
-                </div>
-
-                <button
-                  type="button"
-                  onClick={
-                    clearAll
-                  }
-                  style={{
-                    marginTop: 16,
-                    display:
-                      'inline-flex',
-                    alignItems:
-                      'center',
-                    gap: 8,
-                    border:
-                      '1px solid rgba(255,255,255,.11)',
-                    borderRadius: 12,
-                    padding:
-                      '10px 15px',
-                    background:
-                      '#202229',
-                    color:
-                      '#f4f4f5',
-                    fontWeight: 750,
-                    cursor:
-                      'pointer',
-                  }}
-                >
-                  <RotateCcw
-                    size={16}
-                  />
-                  Xóa bộ lọc
-                </button>
+            <div className="empty-state">
+              <div className="empty-icon">
+                🔎
               </div>
+
+              <h2>
+                Không tìm thấy game phù hợp
+              </h2>
+
+              <p>
+                Thử đổi tên game hoặc
+                bộ lọc.
+              </p>
+
+              <button
+                type="button"
+                className="empty-button"
+                onClick={clearAll}
+              >
+                Xem toàn bộ tủ
+              </button>
             </div>
           )}
         </section>
@@ -812,62 +637,35 @@ const Library = ({
 
       <button
         type="button"
+        className={
+          hasActiveFilter
+            ? 'filter-fab active'
+            : 'filter-fab'
+        }
         onClick={() =>
-          setFilterSheetOpen(
-            true
-          )
+          setFilterSheetOpen(true)
         }
         aria-label="Mở bộ lọc"
-        style={{
-          position: 'fixed',
-          right: 18,
-          bottom: 18,
-          width: 56,
-          height: 56,
-          display: 'grid',
-          placeItems: 'center',
-          borderRadius: 18,
-          border:
-            hasActiveFilter
-              ? '1px solid rgba(245,158,11,.82)'
-              : '1px solid rgba(255,255,255,.11)',
-          background:
-            hasActiveFilter
-              ? 'linear-gradient(180deg, #f59e0b, #d97706)'
-              : 'linear-gradient(180deg, #2a2c33, #1a1c22)',
-          color:
-            hasActiveFilter
-              ? '#171717'
-              : '#f4f4f5',
-          boxShadow:
-            hasActiveFilter
-              ? '0 12px 34px rgba(245,158,11,.25)'
-              : '0 12px 30px rgba(0,0,0,.38)',
-          cursor: 'pointer',
-          zIndex: 40,
-        }}
       >
         <SlidersHorizontal
-          size={24}
-          strokeWidth={2.4}
+          size={22}
+          strokeWidth={2.2}
         />
       </button>
 
+      {/* FILTER SHEET */}
+
       <FilterSheet
-        isOpen={
-          isFilterSheetOpen
-        }
+        isOpen={isFilterSheetOpen}
         onClose={() =>
-          setFilterSheetOpen(
-            false
-          )
+          setFilterSheetOpen(false)
         }
         filter={filter}
         onFilterChange={
           onFilterChange
         }
       />
-    </div>
+    </main>
   );
 };
 
