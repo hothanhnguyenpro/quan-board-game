@@ -1,16 +1,21 @@
-import React from 'react';
+const PaginationDots = ({ total = 0, currentIndex = 0 }) => {
+  const safeTotal = Math.max(0, Number(total) || 0);
 
-const PaginationDots = ({ total, currentIndex }) => {
+  if (safeTotal <= 1) {
+    return null;
+  }
+
   return (
-    <div className="flex justify-center items-center space-x-2 py-4">
-      {Array.from({ length: total }).map((_, index) => (
-        <div
+    <div className="pagination-dots" aria-label="Vị trí trang">
+      {Array.from({ length: safeTotal }).map((_, index) => (
+        <span
           key={index}
-          className={`h-2 rounded-full transition-all duration-300 ${
-            index === currentIndex 
-              ? 'w-8 bg-yellow-400 shadow-[0_0_8px_rgba(253,224,71,0.6)]' 
-              : 'w-2 bg-gray-600'
-          }`}
+          className={
+            index === currentIndex
+              ? 'pagination-dot active'
+              : 'pagination-dot'
+          }
+          aria-current={index === currentIndex ? 'page' : undefined}
         />
       ))}
     </div>

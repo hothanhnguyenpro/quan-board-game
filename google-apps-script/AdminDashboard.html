@@ -1,0 +1,1723 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <base target="_top">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#17130f">
+    <title>Quản trị Ghép tụ · Board Game Cafe</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        font-family:
+          Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+          "Segoe UI", sans-serif;
+        --ink: #f8f1e7;
+        --muted: #b8ad9f;
+        --surface: rgba(38, 31, 25, 0.92);
+        --surface-strong: #2d251e;
+        --surface-soft: #201a16;
+        --line: rgba(255, 245, 231, 0.12);
+        --accent: #f2b84b;
+        --accent-strong: #ffd778;
+        --green: #6bd39a;
+        --red: #ff7f78;
+        --blue: #75bdf5;
+        --shadow: 0 24px 70px rgba(0, 0, 0, 0.34);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        min-height: 100%;
+        background: #17130f;
+      }
+
+      body {
+        min-height: 100vh;
+        margin: 0;
+        color: var(--ink);
+        background:
+          radial-gradient(circle at 12% -10%, rgba(242, 184, 75, 0.2), transparent 38rem),
+          radial-gradient(circle at 100% 18%, rgba(117, 189, 245, 0.1), transparent 30rem),
+          linear-gradient(155deg, #17130f 0%, #211914 55%, #120f0d 100%);
+      }
+
+      button,
+      input {
+        font: inherit;
+      }
+
+      button {
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      [hidden] {
+        display: none !important;
+      }
+
+      .shell {
+        width: min(100%, 1120px);
+        margin: 0 auto;
+        padding:
+          max(20px, env(safe-area-inset-top))
+          max(16px, env(safe-area-inset-right))
+          max(40px, env(safe-area-inset-bottom))
+          max(16px, env(safe-area-inset-left));
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 22px;
+      }
+
+      .brand-mark {
+        display: grid;
+        width: 44px;
+        height: 44px;
+        place-items: center;
+        border: 1px solid rgba(255, 215, 120, 0.35);
+        border-radius: 15px;
+        background: linear-gradient(145deg, rgba(255, 215, 120, 0.2), rgba(242, 184, 75, 0.06));
+        box-shadow: inset 0 1px rgba(255, 255, 255, 0.12);
+        font-size: 23px;
+      }
+
+      .brand p,
+      .brand h1 {
+        margin: 0;
+      }
+
+      .brand p {
+        color: var(--accent);
+        font-size: 0.7rem;
+        font-weight: 800;
+        letter-spacing: 0.16em;
+      }
+
+      .brand h1 {
+        margin-top: 2px;
+        font-size: clamp(1.05rem, 4vw, 1.35rem);
+      }
+
+      .panel {
+        border: 1px solid var(--line);
+        border-radius: 24px;
+        background: var(--surface);
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(18px);
+      }
+
+      .login-panel {
+        width: min(100%, 430px);
+        margin: min(10vh, 90px) auto 0;
+        padding: clamp(24px, 7vw, 38px);
+      }
+
+      .eyebrow {
+        color: var(--accent);
+        font-size: 0.72rem;
+        font-weight: 850;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+      }
+
+      .login-panel h2 {
+        margin: 10px 0 8px;
+        font-size: clamp(1.65rem, 8vw, 2.25rem);
+        line-height: 1.06;
+      }
+
+      .support-copy {
+        margin: 0;
+        color: var(--muted);
+        line-height: 1.55;
+      }
+
+      .field {
+        display: grid;
+        gap: 8px;
+        margin-top: 24px;
+      }
+
+      .field label {
+        font-size: 0.84rem;
+        font-weight: 750;
+      }
+
+      .field input,
+      .checkin-input {
+        width: 100%;
+        min-height: 50px;
+        border: 1px solid rgba(255, 245, 231, 0.17);
+        border-radius: 15px;
+        outline: none;
+        background: rgba(9, 8, 7, 0.46);
+        color: var(--ink);
+        padding: 0 15px;
+        transition: border-color 160ms ease, box-shadow 160ms ease;
+      }
+
+      .field input:focus,
+      .checkin-input:focus {
+        border-color: rgba(242, 184, 75, 0.72);
+        box-shadow: 0 0 0 4px rgba(242, 184, 75, 0.12);
+      }
+
+      .primary-button,
+      .secondary-button,
+      .ghost-button,
+      .meetup-action,
+      .small-action {
+        display: inline-flex;
+        min-height: 44px;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        border: 0;
+        border-radius: 14px;
+        cursor: pointer;
+        font-weight: 800;
+        transition: transform 140ms ease, opacity 140ms ease, background 140ms ease;
+      }
+
+      .primary-button:active,
+      .secondary-button:active,
+      .ghost-button:active,
+      .meetup-action:active,
+      .small-action:active {
+        transform: translateY(1px) scale(0.99);
+      }
+
+      button:disabled {
+        cursor: wait;
+        opacity: 0.55;
+      }
+
+      .primary-button {
+        width: 100%;
+        margin-top: 14px;
+        background: linear-gradient(135deg, var(--accent-strong), var(--accent));
+        color: #2d2112;
+        box-shadow: 0 12px 30px rgba(242, 184, 75, 0.18);
+      }
+
+      .secondary-button {
+        background: rgba(242, 184, 75, 0.13);
+        color: var(--accent-strong);
+        padding: 0 15px;
+      }
+
+      .ghost-button {
+        border: 1px solid var(--line);
+        background: rgba(255, 255, 255, 0.035);
+        color: var(--ink);
+        padding: 0 14px;
+      }
+
+      .form-message {
+        min-height: 22px;
+        margin: 12px 0 0;
+        color: var(--red);
+        font-size: 0.84rem;
+        line-height: 1.45;
+      }
+
+      .dashboard-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 20px;
+      }
+
+      .dashboard-heading h2 {
+        margin: 4px 0 3px;
+        font-size: clamp(1.5rem, 6vw, 2.25rem);
+      }
+
+      .dashboard-heading p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 0.82rem;
+      }
+
+      .header-actions {
+        display: flex;
+        gap: 8px;
+      }
+
+      .header-actions .ghost-button {
+        min-width: 44px;
+        padding: 0 12px;
+      }
+
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+        margin-bottom: 16px;
+      }
+
+      .stat-card {
+        min-width: 0;
+        padding: 16px;
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.045);
+      }
+
+      .stat-card span {
+        display: block;
+        color: var(--muted);
+        font-size: 0.72rem;
+        font-weight: 750;
+      }
+
+      .stat-card strong {
+        display: block;
+        margin-top: 6px;
+        color: var(--ink);
+        font-size: clamp(1.45rem, 7vw, 2rem);
+      }
+
+      .section-card {
+        margin-top: 14px;
+        padding: clamp(16px, 4vw, 22px);
+      }
+
+      .section-heading {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 14px;
+        margin-bottom: 14px;
+      }
+
+      .section-heading h3,
+      .section-heading p {
+        margin: 0;
+      }
+
+      .section-heading h3 {
+        font-size: 1.05rem;
+      }
+
+      .section-heading p {
+        margin-top: 4px;
+        color: var(--muted);
+        font-size: 0.77rem;
+        line-height: 1.45;
+      }
+
+      .pulse-strip {
+        display: grid;
+        grid-auto-columns: minmax(145px, 1fr);
+        grid-auto-flow: column;
+        gap: 10px;
+        overflow-x: auto;
+        padding: 2px 1px 8px;
+        scrollbar-width: thin;
+      }
+
+      .pulse-item {
+        min-width: 0;
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        background: rgba(7, 6, 5, 0.25);
+        padding: 13px;
+      }
+
+      .pulse-head {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--muted);
+        font-size: 0.73rem;
+        font-weight: 800;
+      }
+
+      .pulse-dot {
+        width: 9px;
+        height: 9px;
+        flex: 0 0 auto;
+        border-radius: 999px;
+        background: var(--muted);
+        box-shadow: 0 0 0 0 rgba(107, 211, 154, 0);
+      }
+
+      .pulse-dot.active {
+        background: var(--green);
+        animation: pulse 1.9s infinite;
+      }
+
+      .pulse-dot.playing {
+        background: var(--green);
+        animation: pulse 1.9s infinite;
+      }
+
+      .pulse-dot.last_round {
+        background: var(--accent);
+      }
+
+      .pulse-dot.leaving_soon {
+        background: #71b7ff;
+      }
+
+      .pulse-dot.available {
+        background: #d7f7e5;
+      }
+
+      .pulse-dot.full {
+        background: var(--accent);
+      }
+
+      .pulse-dot.cancelled {
+        background: var(--red);
+      }
+
+      .pulse-item strong {
+        display: block;
+        overflow: hidden;
+        margin-top: 9px;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-size: 0.93rem;
+      }
+
+      .pulse-item small {
+        display: block;
+        margin-top: 4px;
+        color: var(--muted);
+      }
+
+      @keyframes pulse {
+        0% { box-shadow: 0 0 0 0 rgba(107, 211, 154, 0.52); }
+        70% { box-shadow: 0 0 0 8px rgba(107, 211, 154, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(107, 211, 154, 0); }
+      }
+
+      .meetup-list,
+      .registration-list {
+        display: grid;
+        gap: 11px;
+      }
+
+      .meetup-card,
+      .registration-card {
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        background: rgba(9, 8, 7, 0.28);
+        padding: 15px;
+      }
+
+      .meetup-top,
+      .registration-top {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .meetup-copy,
+      .registration-copy {
+        min-width: 0;
+      }
+
+      .meetup-copy h4,
+      .registration-copy h4 {
+        overflow-wrap: anywhere;
+        margin: 0;
+        font-size: 1rem;
+      }
+
+      .meetup-copy p,
+      .registration-copy p {
+        margin: 5px 0 0;
+        color: var(--muted);
+        font-size: 0.77rem;
+        line-height: 1.45;
+      }
+
+      .status-pill {
+        flex: 0 0 auto;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        padding: 6px 9px;
+        background: rgba(255, 255, 255, 0.04);
+        color: var(--muted);
+        font-size: 0.67rem;
+        font-weight: 850;
+      }
+
+      .status-pill.active,
+      .status-pill.checked_in {
+        border-color: rgba(107, 211, 154, 0.28);
+        color: var(--green);
+      }
+
+      .status-pill.full {
+        border-color: rgba(242, 184, 75, 0.28);
+        color: var(--accent-strong);
+      }
+
+      .status-pill.cancelled {
+        border-color: rgba(255, 127, 120, 0.28);
+        color: var(--red);
+      }
+
+      .progress-block {
+        display: grid;
+        gap: 9px;
+        margin-top: 14px;
+      }
+
+      .progress-row {
+        display: grid;
+        grid-template-columns: 78px minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 9px;
+        color: var(--muted);
+        font-size: 0.7rem;
+      }
+
+      .progress-track {
+        height: 7px;
+        overflow: hidden;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.08);
+      }
+
+      .progress-fill {
+        width: 0;
+        height: 100%;
+        border-radius: inherit;
+        background: linear-gradient(90deg, var(--accent), var(--accent-strong));
+        transition: width 260ms ease;
+      }
+
+      .progress-fill.arrived {
+        background: linear-gradient(90deg, #3da975, var(--green));
+      }
+
+      .meetup-action,
+      .small-action {
+        margin-top: 14px;
+        background: rgba(242, 184, 75, 0.13);
+        color: var(--accent-strong);
+        padding: 0 14px;
+      }
+
+      .meetup-action {
+        width: 100%;
+      }
+
+      .meetup-action.close-action {
+        background: rgba(255, 127, 120, 0.1);
+        color: #ffaaa5;
+      }
+
+      .checkin-tools {
+        display: grid;
+        gap: 10px;
+      }
+
+      .checkin-actions {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 9px;
+      }
+
+      .checkin-actions .primary-button {
+        width: auto;
+        min-width: 116px;
+        margin: 0;
+        padding: 0 15px;
+      }
+
+      .scan-button {
+        width: 100%;
+        margin: 0;
+      }
+
+      .empty-state {
+        padding: 24px 14px;
+        border: 1px dashed rgba(255, 245, 231, 0.16);
+        border-radius: 16px;
+        color: var(--muted);
+        text-align: center;
+        font-size: 0.82rem;
+        line-height: 1.5;
+      }
+
+      .scanner-layer {
+        position: fixed;
+        z-index: 50;
+        inset: 0;
+        display: grid;
+        align-items: end;
+        background: rgba(0, 0, 0, 0.72);
+        padding: 16px;
+      }
+
+      .scanner-panel {
+        width: min(100%, 560px);
+        margin: 0 auto;
+        overflow: hidden;
+        border: 1px solid var(--line);
+        border-radius: 24px;
+        background: #191410;
+        box-shadow: var(--shadow);
+      }
+
+      .scanner-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 16px;
+      }
+
+      .scanner-header h3,
+      .scanner-header p {
+        margin: 0;
+      }
+
+      .scanner-header p {
+        margin-top: 3px;
+        color: var(--muted);
+        font-size: 0.74rem;
+      }
+
+      .scanner-video-wrap {
+        position: relative;
+        aspect-ratio: 4 / 3;
+        overflow: hidden;
+        background: #060504;
+      }
+
+      .scanner-video-wrap video {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .scanner-frame {
+        position: absolute;
+        width: min(64vw, 250px);
+        aspect-ratio: 1;
+        inset: 50% auto auto 50%;
+        border: 2px solid var(--accent-strong);
+        border-radius: 21px;
+        box-shadow: 0 0 0 999px rgba(0, 0, 0, 0.28);
+        transform: translate(-50%, -50%);
+      }
+
+      .scanner-message {
+        min-height: 46px;
+        margin: 0;
+        padding: 13px 16px;
+        color: var(--muted);
+        font-size: 0.79rem;
+        line-height: 1.45;
+      }
+
+      .toast {
+        position: fixed;
+        z-index: 80;
+        right: 16px;
+        bottom: max(16px, env(safe-area-inset-bottom));
+        left: 16px;
+        width: min(calc(100% - 32px), 480px);
+        margin-left: auto;
+        border: 1px solid rgba(107, 211, 154, 0.3);
+        border-radius: 16px;
+        background: #203529;
+        box-shadow: var(--shadow);
+        color: #dff9e9;
+        padding: 13px 15px;
+        font-size: 0.82rem;
+        line-height: 1.45;
+      }
+
+      .toast.error {
+        border-color: rgba(255, 127, 120, 0.34);
+        background: #3b211f;
+        color: #ffe4e1;
+      }
+
+      .loading-line {
+        width: 100%;
+        height: 3px;
+        overflow: hidden;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.06);
+        margin-bottom: 14px;
+      }
+
+      .loading-line::after {
+        display: block;
+        width: 42%;
+        height: 100%;
+        border-radius: inherit;
+        background: var(--accent);
+        content: "";
+        animation: loading 1.15s infinite ease-in-out;
+      }
+
+      @keyframes loading {
+        from { transform: translateX(-120%); }
+        to { transform: translateX(340%); }
+      }
+
+      @media (min-width: 720px) {
+        .shell {
+          padding-right: 28px;
+          padding-left: 28px;
+        }
+
+        .stats-grid {
+          grid-template-columns: repeat(4, minmax(0, 1fr));
+        }
+
+        .meetup-list {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .registration-list {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .scanner-layer {
+          align-items: center;
+        }
+      }
+
+      @media (max-width: 520px) {
+        .dashboard-header {
+          align-items: stretch;
+          flex-direction: column;
+        }
+
+        .header-actions {
+          width: 100%;
+        }
+
+        .header-actions .ghost-button {
+          flex: 1;
+        }
+
+        .checkin-actions {
+          grid-template-columns: 1fr;
+        }
+
+        .checkin-actions .primary-button {
+          width: 100%;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          scroll-behavior: auto !important;
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.01ms !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="shell">
+      <div class="brand" aria-label="Board Game Cafe">
+        <div class="brand-mark" aria-hidden="true">🎲</div>
+        <div>
+          <p>BOARD GAME CAFE</p>
+          <h1>Meetup Control</h1>
+        </div>
+      </div>
+
+      <section id="login-view" class="panel login-panel" aria-labelledby="login-title">
+        <span class="eyebrow">KHU VỰC NỘI BỘ</span>
+        <h2 id="login-title">Đăng nhập quản trị</h2>
+        <p class="support-copy">
+          Mở hoặc đóng tụ, theo dõi số chỗ và xác nhận khách đã đến quán.
+        </p>
+
+        <form id="login-form" novalidate>
+          <div class="field">
+            <label for="admin-password">Mật khẩu</label>
+            <input
+              id="admin-password"
+              name="password"
+              type="password"
+              minlength="12"
+              maxlength="256"
+              autocomplete="current-password"
+              required
+            >
+          </div>
+          <button id="login-button" class="primary-button server-action" type="submit">
+            Đăng nhập
+          </button>
+          <p id="login-message" class="form-message" role="alert" aria-live="polite"></p>
+        </form>
+      </section>
+
+      <section id="dashboard-view" hidden aria-labelledby="dashboard-title">
+        <header class="dashboard-header">
+          <div class="dashboard-heading">
+            <span class="eyebrow">VẬN HÀNH TRONG NGÀY</span>
+            <h2 id="dashboard-title">Bảng điều khiển tụ game</h2>
+            <p id="last-updated">Chưa đồng bộ dữ liệu</p>
+          </div>
+          <div class="header-actions">
+            <button id="refresh-button" class="ghost-button server-action" type="button">
+              ↻ Làm mới
+            </button>
+            <button id="logout-button" class="ghost-button" type="button">
+              Đăng xuất
+            </button>
+          </div>
+        </header>
+
+        <div id="loading-line" class="loading-line" hidden aria-hidden="true"></div>
+        <div id="stats-grid" class="stats-grid" aria-label="Tổng quan"></div>
+
+        <section class="panel section-card" aria-labelledby="pulse-title">
+          <div class="section-heading">
+            <div>
+              <h3 id="pulse-title">Nhịp bàn</h3>
+              <p>Tín hiệu tự nguyện từ QR trên bàn; đây không phải cam kết giờ rời quán.</p>
+            </div>
+          </div>
+          <div id="pulse-strip" class="pulse-strip"></div>
+        </section>
+
+        <section class="panel section-card" aria-labelledby="checkin-title">
+          <div class="section-heading">
+            <div>
+              <h3 id="checkin-title">Check-in tại quán</h3>
+              <p>Quét QR trên vé của khách hoặc nhập mã thủ công.</p>
+            </div>
+          </div>
+
+          <form id="checkin-form" class="checkin-tools" novalidate>
+            <div class="checkin-actions">
+              <input
+                id="checkin-code"
+                class="checkin-input"
+                name="checkInCode"
+                type="text"
+                autocomplete="off"
+                autocapitalize="off"
+                spellcheck="false"
+                placeholder="Mã check-in hoặc nội dung QR"
+                aria-label="Mã check-in"
+                required
+              >
+              <button class="primary-button server-action" type="submit">
+                Xác nhận
+              </button>
+            </div>
+            <button id="scan-button" class="secondary-button scan-button" type="button">
+              ▣ Quét QR bằng camera
+            </button>
+          </form>
+        </section>
+
+        <section class="panel section-card" aria-labelledby="meetups-title">
+          <div class="section-heading">
+            <div>
+              <h3 id="meetups-title">Các tụ game</h3>
+              <p>Số đã đăng ký và đã đến được tính riêng.</p>
+            </div>
+          </div>
+          <div id="meetup-list" class="meetup-list"></div>
+        </section>
+
+        <section class="panel section-card" aria-labelledby="registrations-title">
+          <div class="section-heading">
+            <div>
+              <h3 id="registrations-title">Đăng ký gần đây</h3>
+              <p>Có thể check-in thủ công khi camera không sử dụng được.</p>
+            </div>
+          </div>
+          <div id="registration-list" class="registration-list"></div>
+        </section>
+      </section>
+    </main>
+
+    <div
+      id="scanner-layer"
+      class="scanner-layer"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="scanner-title"
+      hidden
+    >
+      <section class="scanner-panel">
+        <header class="scanner-header">
+          <div>
+            <h3 id="scanner-title">Quét QR check-in</h3>
+            <p>Đưa mã QR vào giữa khung hình.</p>
+          </div>
+          <button id="scanner-close" class="ghost-button" type="button" aria-label="Đóng camera">
+            ✕
+          </button>
+        </header>
+        <div class="scanner-video-wrap">
+          <video id="scanner-video" playsinline muted></video>
+          <div class="scanner-frame" aria-hidden="true"></div>
+        </div>
+        <p id="scanner-message" class="scanner-message" role="status" aria-live="polite">
+          Đang mở camera…
+        </p>
+      </section>
+    </div>
+
+    <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+
+    <script>
+      'use strict';
+
+      (() => {
+        const SESSION_STORAGE_KEY = 'board-game-cafe.admin-session.v1';
+        const STATUS_LABELS = {
+          active: 'Đang mở',
+          full: 'Đã đủ',
+          closed: 'Đã đóng',
+          cancelled: 'Đã hủy',
+          checked_in: 'Đã đến',
+          pending: 'Chưa đến',
+          playing: 'Đang chơi',
+          last_round: 'Khách báo ván cuối',
+          leaving_soon: 'Khách báo sắp thu dọn',
+          available: 'Bàn đã trống',
+        };
+
+        const state = {
+          sessionToken: sessionStorage.getItem(SESSION_STORAGE_KEY) || '',
+          snapshot: null,
+          busy: false,
+          toastTimer: 0,
+          scanner: {
+            detector: null,
+            stream: null,
+            frameId: 0,
+            detecting: false,
+            lastDetectionAt: 0,
+          },
+        };
+
+        const elements = {
+          loginView: document.getElementById('login-view'),
+          loginForm: document.getElementById('login-form'),
+          loginButton: document.getElementById('login-button'),
+          loginPassword: document.getElementById('admin-password'),
+          loginMessage: document.getElementById('login-message'),
+          dashboardView: document.getElementById('dashboard-view'),
+          lastUpdated: document.getElementById('last-updated'),
+          loadingLine: document.getElementById('loading-line'),
+          statsGrid: document.getElementById('stats-grid'),
+          pulseStrip: document.getElementById('pulse-strip'),
+          meetupList: document.getElementById('meetup-list'),
+          registrationList: document.getElementById('registration-list'),
+          refreshButton: document.getElementById('refresh-button'),
+          logoutButton: document.getElementById('logout-button'),
+          checkInForm: document.getElementById('checkin-form'),
+          checkInCode: document.getElementById('checkin-code'),
+          scanButton: document.getElementById('scan-button'),
+          scannerLayer: document.getElementById('scanner-layer'),
+          scannerVideo: document.getElementById('scanner-video'),
+          scannerMessage: document.getElementById('scanner-message'),
+          scannerClose: document.getElementById('scanner-close'),
+          toast: document.getElementById('toast'),
+        };
+
+        function serverLogin(password) {
+          return new Promise((resolve, reject) => {
+            google.script.run
+              .withSuccessHandler(resolve)
+              .withFailureHandler(reject)
+              .adminLogin(password);
+          });
+        }
+
+        function serverLogout(sessionToken) {
+          return new Promise((resolve, reject) => {
+            google.script.run
+              .withSuccessHandler(resolve)
+              .withFailureHandler(reject)
+              .adminLogout(sessionToken);
+          });
+        }
+
+        function serverGetDashboard(sessionToken) {
+          return new Promise((resolve, reject) => {
+            google.script.run
+              .withSuccessHandler(resolve)
+              .withFailureHandler(reject)
+              .adminGetDashboard(sessionToken);
+          });
+        }
+
+        function serverSetMeetupStatus(sessionToken, meetupId, status, operationId) {
+          return new Promise((resolve, reject) => {
+            google.script.run
+              .withSuccessHandler(resolve)
+              .withFailureHandler(reject)
+              .adminSetMeetupStatus(sessionToken, meetupId, status, operationId);
+          });
+        }
+
+        function serverCheckIn(sessionToken, code, operationId) {
+          return new Promise((resolve, reject) => {
+            google.script.run
+              .withSuccessHandler(resolve)
+              .withFailureHandler(reject)
+              .adminCheckInRegistration(sessionToken, code, operationId);
+          });
+        }
+
+        function createOperationId() {
+          if (globalThis.crypto && typeof globalThis.crypto.randomUUID === 'function') {
+            return globalThis.crypto.randomUUID();
+          }
+
+          return `admin-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+        }
+
+        function clean(value) {
+          return String(value == null ? '' : value).trim();
+        }
+
+        function finiteNumber(value, fallback = 0) {
+          const number = Number(value);
+          return Number.isFinite(number) ? number : fallback;
+        }
+
+        function normalizeStatus(value) {
+          const status = clean(value).toLowerCase();
+          return ['active', 'full', 'closed', 'cancelled'].includes(status)
+            ? status
+            : 'closed';
+        }
+
+        function normalizeCheckInStatus(value, checkedInAt) {
+          const status = clean(value).toLowerCase();
+          return status === 'checked_in' || clean(checkedInAt) ? 'checked_in' : 'pending';
+        }
+
+        function responseError(response, fallback) {
+          const error = new Error(clean(response && response.message) || fallback);
+          error.code = clean(response && response.code);
+          return error;
+        }
+
+        function errorMessage(error, fallback = 'Không thể hoàn tất thao tác.') {
+          if (typeof error === 'string') return clean(error) || fallback;
+          return clean(error && (error.message || error.details)) || fallback;
+        }
+
+        function isSessionError(error) {
+          const text = `${clean(error && error.code)} ${errorMessage(error, '')}`;
+          return /ADMIN_SESSION_REQUIRED|phiên quản trị|dang nhap quan tri/i.test(text);
+        }
+
+        function setBusy(value) {
+          state.busy = Boolean(value);
+          elements.loadingLine.hidden = !state.busy;
+          document.querySelectorAll('.server-action').forEach((button) => {
+            button.disabled = state.busy;
+          });
+        }
+
+        function setSession(token) {
+          state.sessionToken = clean(token);
+          if (state.sessionToken) {
+            sessionStorage.setItem(SESSION_STORAGE_KEY, state.sessionToken);
+          } else {
+            sessionStorage.removeItem(SESSION_STORAGE_KEY);
+          }
+        }
+
+        function showLogin(message = '') {
+          stopScanner();
+          setSession('');
+          state.snapshot = null;
+          elements.dashboardView.hidden = true;
+          elements.loginView.hidden = false;
+          elements.loginMessage.textContent = clean(message);
+          elements.loginPassword.value = '';
+          window.setTimeout(() => elements.loginPassword.focus(), 0);
+        }
+
+        function showDashboard() {
+          elements.loginView.hidden = true;
+          elements.dashboardView.hidden = false;
+          elements.loginMessage.textContent = '';
+        }
+
+        function showToast(message, type = 'success') {
+          window.clearTimeout(state.toastTimer);
+          elements.toast.textContent = clean(message);
+          elements.toast.classList.toggle('error', type === 'error');
+          elements.toast.hidden = !clean(message);
+
+          if (clean(message)) {
+            state.toastTimer = window.setTimeout(() => {
+              elements.toast.hidden = true;
+            }, 4400);
+          }
+        }
+
+        function createNode(tagName, className, text) {
+          const node = document.createElement(tagName);
+          if (className) node.className = className;
+          if (text != null) node.textContent = String(text);
+          return node;
+        }
+
+        function formatDateTime(value) {
+          if (!value) return '';
+          const date = value instanceof Date ? value : new Date(value);
+          if (Number.isNaN(date.getTime())) return clean(value);
+
+          return new Intl.DateTimeFormat('vi-VN', {
+            day: '2-digit',
+            month: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+          }).format(date);
+        }
+
+        function normalizeMeetup(meetup) {
+          const capacity = Math.max(
+            0,
+            finiteNumber(meetup.capacity, finiteNumber(meetup.requiredPlayers, 0))
+          );
+          const confirmedSeats = Math.max(
+            0,
+            finiteNumber(meetup.confirmedSeats, finiteNumber(meetup.currentPlayers, 0))
+          );
+          const checkedInSeats = Math.max(
+            0,
+            finiteNumber(meetup.checkedInSeats, 0)
+          );
+
+          return {
+            ...meetup,
+            id: clean(meetup.id || meetup.meetupId),
+            gameName: clean(meetup.gameName || meetup.name || meetup.gameId) || 'Tụ chưa đặt tên',
+            room: clean(meetup.room || meetup.table || meetup.area) || 'Chưa xếp bàn',
+            startTime: meetup.startTime || meetup.date || '',
+            status: normalizeStatus(meetup.status),
+            capacity,
+            confirmedSeats,
+            checkedInSeats,
+            remainingSeats: Math.max(
+              0,
+              finiteNumber(meetup.remainingSeats, capacity - confirmedSeats)
+            ),
+          };
+        }
+
+        function snapshotMeetups(snapshot) {
+          return Array.isArray(snapshot && snapshot.meetups)
+            ? snapshot.meetups.map(normalizeMeetup)
+            : [];
+        }
+
+        function snapshotRegistrations(snapshot) {
+          const rows =
+            (snapshot && snapshot.registrations) ||
+            (snapshot && snapshot.recentRegistrations) ||
+            [];
+          return Array.isArray(rows) ? rows : [];
+        }
+
+        function snapshotTables(snapshot) {
+          const rows = (snapshot && snapshot.tables) || [];
+          if (!Array.isArray(rows)) return [];
+
+          return rows
+            .map((table) => {
+              const tableState = clean(table.tableState).toLowerCase();
+              return {
+                tableCode: clean(table.tableCode),
+                tableState: ['playing', 'last_round', 'leaving_soon', 'available'].includes(
+                  tableState
+                )
+                  ? tableState
+                  : 'playing',
+                groupSize: Math.max(0, finiteNumber(table.groupSize, 0)),
+                gameName: clean(table.gameName),
+                roundMinutes: Math.max(0, finiteNumber(table.roundMinutes, 0)),
+                timestamp: table.timestamp || '',
+              };
+            })
+            .filter((table) => table.tableCode);
+        }
+
+        function renderStats(meetups, registrations) {
+          const openCount = meetups.filter((meetup) => meetup.status === 'active').length;
+          const confirmedSeats = meetups.reduce(
+            (total, meetup) => total + meetup.confirmedSeats,
+            0
+          );
+          const checkedInSeats = meetups.reduce(
+            (total, meetup) => total + meetup.checkedInSeats,
+            0
+          );
+          const items = [
+            ['Tổng số tụ', meetups.length],
+            ['Đang mở', openCount],
+            ['Đã đăng ký', confirmedSeats],
+            ['Đã đến quán', checkedInSeats],
+          ];
+
+          elements.statsGrid.replaceChildren();
+          items.forEach(([label, value]) => {
+            const card = createNode('article', 'stat-card');
+            card.append(createNode('span', '', label), createNode('strong', '', value));
+            elements.statsGrid.append(card);
+          });
+
+          // Keep the argument intentional: a backend may return registrations
+          // before meetup aggregates are available during migration.
+          if (!meetups.length && registrations.length) {
+            elements.statsGrid.lastElementChild.querySelector('strong').textContent =
+              registrations.filter((row) =>
+                normalizeCheckInStatus(row.checkInStatus, row.checkedInAt) === 'checked_in'
+              ).length;
+          }
+        }
+
+        function renderPulse(tables) {
+          elements.pulseStrip.replaceChildren();
+
+          if (!tables.length) {
+            elements.pulseStrip.append(
+              createNode(
+                'div',
+                'empty-state',
+                'Chưa có tín hiệu từ bàn. Khách chỉ cập nhật khi tự nguyện dùng QR tại bàn.'
+              )
+            );
+            return;
+          }
+
+          tables.forEach((table) => {
+            const item = createNode('article', 'pulse-item');
+            const head = createNode('div', 'pulse-head');
+            head.append(
+              createNode('span', `pulse-dot ${table.tableState}`),
+              createNode(
+                'span',
+                '',
+                STATUS_LABELS[table.tableState] || table.tableState
+              )
+            );
+
+            const details = [
+              table.groupSize ? `${table.groupSize} khách` : '',
+              table.gameName,
+              table.roundMinutes ? `${table.roundMinutes} phút/ván` : '',
+            ].filter(Boolean);
+
+            item.append(
+              head,
+              createNode('strong', '', `Bàn ${table.tableCode}`),
+              createNode(
+                'small',
+                '',
+                details.join(' · ') || 'Chưa có thông tin ván'
+              )
+            );
+
+            if (table.timestamp) {
+              item.append(
+                createNode('small', '', `Cập nhật ${formatDateTime(table.timestamp)}`)
+              );
+            }
+
+            elements.pulseStrip.append(item);
+          });
+        }
+
+        function progressRow(label, value, total, className = '') {
+          const row = createNode('div', 'progress-row');
+          const safeTotal = Math.max(0, finiteNumber(total, 0));
+          const safeValue = Math.max(0, finiteNumber(value, 0));
+          const percentage = safeTotal > 0 ? Math.min(100, (safeValue / safeTotal) * 100) : 0;
+          const track = createNode('div', 'progress-track');
+          const fill = createNode('div', `progress-fill ${className}`.trim());
+          fill.style.width = `${percentage}%`;
+          track.append(fill);
+          row.append(
+            createNode('span', '', label),
+            track,
+            createNode('strong', '', safeTotal > 0 ? `${safeValue}/${safeTotal}` : safeValue)
+          );
+          return row;
+        }
+
+        function renderMeetups(meetups) {
+          elements.meetupList.replaceChildren();
+
+          if (!meetups.length) {
+            elements.meetupList.append(
+              createNode('div', 'empty-state', 'Chưa có dữ liệu tụ game.')
+            );
+            return;
+          }
+
+          meetups.forEach((meetup) => {
+            const card = createNode('article', 'meetup-card');
+            const top = createNode('div', 'meetup-top');
+            const copy = createNode('div', 'meetup-copy');
+            const details = [meetup.room, formatDateTime(meetup.startTime)]
+              .filter(Boolean)
+              .join(' · ');
+            copy.append(
+              createNode('h4', '', meetup.gameName),
+              createNode('p', '', details || meetup.id)
+            );
+            top.append(
+              copy,
+              createNode(
+                'span',
+                `status-pill ${meetup.status}`,
+                STATUS_LABELS[meetup.status] || meetup.status
+              )
+            );
+
+            const progress = createNode('div', 'progress-block');
+            progress.append(
+              progressRow('Đăng ký', meetup.confirmedSeats, meetup.capacity),
+              progressRow(
+                'Đã đến',
+                meetup.checkedInSeats,
+                meetup.confirmedSeats || meetup.capacity,
+                'arrived'
+              )
+            );
+
+            card.append(top, progress);
+
+            if (meetup.status !== 'cancelled' && meetup.id) {
+              const shouldClose = meetup.status === 'active' || meetup.status === 'full';
+              const nextStatus = shouldClose ? 'closed' : 'active';
+              const button = createNode(
+                'button',
+                `meetup-action server-action ${shouldClose ? 'close-action' : ''}`,
+                shouldClose ? 'Đóng nhận đăng ký' : 'Mở nhận đăng ký'
+              );
+              button.type = 'button';
+              button.addEventListener('click', () => updateMeetupStatus(meetup, nextStatus));
+              card.append(button);
+            }
+
+            elements.meetupList.append(card);
+          });
+        }
+
+        function renderRegistrations(registrations) {
+          elements.registrationList.replaceChildren();
+
+          if (!registrations.length) {
+            elements.registrationList.append(
+              createNode(
+                'div',
+                'empty-state',
+                'Backend chưa trả danh sách đăng ký hoặc chưa có khách đăng ký.'
+              )
+            );
+            return;
+          }
+
+          registrations.slice(0, 60).forEach((registration) => {
+            const checkInStatus = normalizeCheckInStatus(
+              registration.checkInStatus,
+              registration.checkedInAt
+            );
+            const card = createNode('article', 'registration-card');
+            const top = createNode('div', 'registration-top');
+            const copy = createNode('div', 'registration-copy');
+            const personName = clean(registration.name || registration.displayName) || 'Khách đăng ký';
+            const gameName = clean(registration.gameName || registration.meetupName || registration.meetupId);
+            const seats = Math.max(
+              1,
+              finiteNumber(registration.totalSeats, 1 + finiteNumber(registration.companions, 0))
+            );
+            const details = [
+              gameName,
+              clean(registration.maskedPhone || registration.phone),
+              `${seats} chỗ`,
+            ].filter(Boolean);
+
+            copy.append(
+              createNode('h4', '', personName),
+              createNode('p', '', details.join(' · '))
+            );
+            top.append(
+              copy,
+              createNode(
+                'span',
+                `status-pill ${checkInStatus}`,
+                STATUS_LABELS[checkInStatus]
+              )
+            );
+            card.append(top);
+
+            const registrationCode = clean(
+              registration.checkInCode || registration.registrationId
+            );
+            if (checkInStatus !== 'checked_in' && registrationCode) {
+              const button = createNode(
+                'button',
+                'small-action server-action',
+                'Xác nhận đã đến'
+              );
+              button.type = 'button';
+              button.addEventListener('click', () => checkIn(registrationCode));
+              card.append(button);
+            } else if (checkInStatus === 'checked_in' && registration.checkedInAt) {
+              card.append(
+                createNode('p', 'support-copy', `Check-in: ${formatDateTime(registration.checkedInAt)}`)
+              );
+            }
+
+            elements.registrationList.append(card);
+          });
+        }
+
+        function renderSnapshot(snapshot) {
+          const meetups = snapshotMeetups(snapshot);
+          const registrations = snapshotRegistrations(snapshot);
+          const tables = snapshotTables(snapshot);
+          renderStats(meetups, registrations);
+          renderPulse(tables);
+          renderMeetups(meetups);
+          renderRegistrations(registrations);
+
+          elements.lastUpdated.textContent = `Cập nhật ${formatDateTime(
+            snapshot.generatedAt || new Date()
+          )}`;
+        }
+
+        async function refreshDashboard(options = {}) {
+          const quiet = options.quiet === true;
+          if (!state.sessionToken || state.busy) return;
+
+          setBusy(true);
+          try {
+            const response = await serverGetDashboard(state.sessionToken);
+            if (!response || response.success === false) {
+              throw responseError(response, 'Không thể tải bảng điều khiển.');
+            }
+
+            state.snapshot = response.data && !response.meetups ? response.data : response;
+            renderSnapshot(state.snapshot || {});
+            showDashboard();
+            if (!quiet) showToast('Đã đồng bộ dữ liệu mới nhất.');
+          } catch (error) {
+            if (isSessionError(error)) {
+              showLogin('Phiên quản trị đã hết hạn. Vui lòng đăng nhập lại.');
+            } else {
+              showToast(errorMessage(error, 'Không thể tải bảng điều khiển.'), 'error');
+            }
+          } finally {
+            setBusy(false);
+          }
+        }
+
+        async function updateMeetupStatus(meetup, nextStatus) {
+          if (state.busy || !state.sessionToken) return;
+          setBusy(true);
+
+          try {
+            const response = await serverSetMeetupStatus(
+              state.sessionToken,
+              meetup.id,
+              nextStatus,
+              createOperationId()
+            );
+            if (!response || response.success === false) {
+              throw responseError(response, 'Không thể cập nhật trạng thái tụ.');
+            }
+
+            showToast(
+              clean(response.message) ||
+                (nextStatus === 'active'
+                  ? 'Đã mở nhận đăng ký.'
+                  : 'Đã đóng nhận đăng ký.')
+            );
+          } catch (error) {
+            if (isSessionError(error)) {
+              showLogin('Phiên quản trị đã hết hạn. Vui lòng đăng nhập lại.');
+              return;
+            }
+            showToast(errorMessage(error, 'Không thể cập nhật trạng thái tụ.'), 'error');
+          } finally {
+            setBusy(false);
+          }
+
+          await refreshDashboard({ quiet: true });
+        }
+
+        function extractCheckInCode(rawValue) {
+          let value = clean(rawValue);
+          if (!value) return '';
+
+          try {
+            const parsed = JSON.parse(value);
+            const fromJson = clean(
+              parsed && (parsed.checkInCode || parsed.code || parsed.token)
+            );
+            if (fromJson) value = fromJson;
+          } catch (_) {
+            // QR payload is normally a URL or opaque token, not JSON.
+          }
+
+          try {
+            const url = new URL(value);
+            const fromUrl = clean(
+              url.searchParams.get('code') ||
+                url.searchParams.get('checkInCode') ||
+                url.searchParams.get('checkin') ||
+                url.searchParams.get('token')
+            );
+            if (fromUrl) return fromUrl;
+          } catch (_) {
+            // Continue with an opaque QR value.
+          }
+
+          return value
+            .replace(/^BGC-CHECKIN:/i, '')
+            .replace(/^bgc-checkin:v1:/i, '')
+            .trim();
+        }
+
+        async function checkIn(rawCode) {
+          const code = extractCheckInCode(rawCode);
+          if (!code) {
+            showToast('Vui lòng nhập hoặc quét mã check-in.', 'error');
+            elements.checkInCode.focus();
+            return;
+          }
+          if (state.busy || !state.sessionToken) return;
+
+          setBusy(true);
+          try {
+            const response = await serverCheckIn(
+              state.sessionToken,
+              code,
+              createOperationId()
+            );
+            if (!response || response.success === false) {
+              throw responseError(response, 'Không thể check-in đăng ký này.');
+            }
+
+            elements.checkInCode.value = '';
+            showToast(clean(response.message) || 'Đã xác nhận khách đến quán.');
+          } catch (error) {
+            if (isSessionError(error)) {
+              showLogin('Phiên quản trị đã hết hạn. Vui lòng đăng nhập lại.');
+              return;
+            }
+            showToast(errorMessage(error, 'Không thể check-in đăng ký này.'), 'error');
+          } finally {
+            setBusy(false);
+          }
+
+          await refreshDashboard({ quiet: true });
+        }
+
+        async function startScanner() {
+          if (state.scanner.stream) return;
+
+          if (
+            !('BarcodeDetector' in globalThis) ||
+            !navigator.mediaDevices ||
+            typeof navigator.mediaDevices.getUserMedia !== 'function'
+          ) {
+            showToast(
+              'Trình duyệt này chưa hỗ trợ quét QR trực tiếp. Hãy dùng camera hệ thống rồi dán mã vào ô thủ công.',
+              'error'
+            );
+            elements.checkInCode.focus();
+            return;
+          }
+
+          elements.scannerLayer.hidden = false;
+          elements.scannerMessage.textContent = 'Đang xin quyền mở camera…';
+
+          try {
+            if (typeof BarcodeDetector.getSupportedFormats === 'function') {
+              const formats = await BarcodeDetector.getSupportedFormats();
+              if (!formats.includes('qr_code')) {
+                throw new Error('Thiết bị không hỗ trợ nhận diện mã QR.');
+              }
+            }
+
+            state.scanner.detector = new BarcodeDetector({ formats: ['qr_code'] });
+            state.scanner.stream = await navigator.mediaDevices.getUserMedia({
+              audio: false,
+              video: {
+                facingMode: { ideal: 'environment' },
+                width: { ideal: 1280 },
+                height: { ideal: 720 },
+              },
+            });
+            elements.scannerVideo.srcObject = state.scanner.stream;
+            await elements.scannerVideo.play();
+            elements.scannerMessage.textContent = 'Đưa mã QR vào giữa khung hình.';
+            scanFrame(performance.now());
+          } catch (error) {
+            stopScanner();
+            showToast(errorMessage(error, 'Không thể mở camera.'), 'error');
+          }
+        }
+
+        function scanFrame(timestamp) {
+          if (!state.scanner.stream) return;
+
+          const shouldDetect =
+            !state.scanner.detecting &&
+            elements.scannerVideo.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA &&
+            timestamp - state.scanner.lastDetectionAt >= 220;
+
+          if (shouldDetect) {
+            state.scanner.detecting = true;
+            state.scanner.lastDetectionAt = timestamp;
+
+            state.scanner.detector
+              .detect(elements.scannerVideo)
+              .then((barcodes) => {
+                const rawValue = clean(barcodes && barcodes[0] && barcodes[0].rawValue);
+                if (!rawValue) return;
+
+                const code = extractCheckInCode(rawValue);
+                if (!code) {
+                  elements.scannerMessage.textContent =
+                    'Đã thấy QR nhưng không đọc được mã check-in.';
+                  return;
+                }
+
+                elements.checkInCode.value = code;
+                stopScanner();
+                checkIn(code);
+              })
+              .catch(() => {
+                // A transient frame decode error is normal; continue scanning.
+              })
+              .finally(() => {
+                state.scanner.detecting = false;
+              });
+          }
+
+          state.scanner.frameId = requestAnimationFrame(scanFrame);
+        }
+
+        function stopScanner() {
+          if (state.scanner.frameId) {
+            cancelAnimationFrame(state.scanner.frameId);
+          }
+          state.scanner.frameId = 0;
+          state.scanner.detecting = false;
+          state.scanner.detector = null;
+
+          if (state.scanner.stream) {
+            state.scanner.stream.getTracks().forEach((track) => track.stop());
+          }
+          state.scanner.stream = null;
+          elements.scannerVideo.pause();
+          elements.scannerVideo.srcObject = null;
+          elements.scannerLayer.hidden = true;
+        }
+
+        elements.loginForm.addEventListener('submit', async (event) => {
+          event.preventDefault();
+          if (state.busy) return;
+
+          const password = elements.loginPassword.value;
+          if (!password) {
+            elements.loginMessage.textContent = 'Vui lòng nhập mật khẩu quản trị.';
+            return;
+          }
+
+          setBusy(true);
+          elements.loginMessage.textContent = '';
+          try {
+            const response = await serverLogin(password);
+            if (!response || response.success !== true || !clean(response.sessionToken)) {
+              throw responseError(response, 'Không thể đăng nhập quản trị.');
+            }
+
+            setSession(response.sessionToken);
+            elements.loginPassword.value = '';
+            showDashboard();
+          } catch (error) {
+            elements.loginMessage.textContent = errorMessage(
+              error,
+              'Không thể đăng nhập quản trị.'
+            );
+          } finally {
+            setBusy(false);
+          }
+
+          if (state.sessionToken) {
+            await refreshDashboard({ quiet: true });
+          }
+        });
+
+        elements.logoutButton.addEventListener('click', async () => {
+          const token = state.sessionToken;
+          showLogin('');
+          if (!token) return;
+
+          try {
+            await serverLogout(token);
+          } catch (_) {
+            // Local session is already gone; server cache expiry is sufficient.
+          }
+        });
+
+        elements.refreshButton.addEventListener('click', () => refreshDashboard());
+        elements.checkInForm.addEventListener('submit', (event) => {
+          event.preventDefault();
+          checkIn(elements.checkInCode.value);
+        });
+        elements.scanButton.addEventListener('click', startScanner);
+        elements.scannerClose.addEventListener('click', stopScanner);
+        elements.scannerLayer.addEventListener('click', (event) => {
+          if (event.target === elements.scannerLayer) stopScanner();
+        });
+        document.addEventListener('visibilitychange', () => {
+          if (document.hidden) stopScanner();
+        });
+        window.addEventListener('beforeunload', stopScanner);
+
+        if (!globalThis.google || !google.script || !google.script.run) {
+          showLogin('Dashboard phải được mở từ URL Google Apps Script đã deploy.');
+          elements.loginButton.disabled = true;
+          return;
+        }
+
+        if (state.sessionToken) {
+          showDashboard();
+          refreshDashboard({ quiet: true });
+        } else {
+          showLogin('');
+        }
+      })();
+    </script>
+  </body>
+</html>

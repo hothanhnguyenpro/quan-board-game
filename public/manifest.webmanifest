@@ -1,0 +1,29 @@
+{
+  "id": "./",
+  "name": "Noburi Soul Station - Tủ Board Game",
+  "short_name": "Noburi Games",
+  "description": "Tủ board game và hướng dẫn nhanh dành cho khách tại Noburi Soul Station.",
+  "lang": "vi",
+  "dir": "ltr",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "background_color": "#0b0c0e",
+  "theme_color": "#0b0c0e",
+  "categories": ["games", "entertainment", "lifestyle"],
+  "icons": [
+    {
+      "src": "pwa-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "pwa-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}

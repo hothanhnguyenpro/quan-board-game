@@ -1,154 +1,65 @@
-import React from 'react';
-import { motion } from 'framer-motion';
+import { memo } from 'react';
+import { motion, useReducedMotion } from 'framer-motion';
 
-const GameCard = ({
-  game,
-  onClick,
-}) => {
-  const edgeColor =
-    game.edgeColor ||
-    '#5a4635';
+const clampDimension = (value, fallback, min, max) => {
+  const parsed = Number.parseFloat(String(value ?? ''));
+  const safeValue = Number.isFinite(parsed) ? parsed : fallback;
+  return Math.max(min, Math.min(safeValue, max));
+};
 
-  const rawWidth = Number.parseFloat(
-    String(
-      game.boxThickness ||
-        '58px'
-    )
-  );
-
-  const rawHeight =
-    Number.parseFloat(
-      String(
-        game.boxHeight ||
-          '175px'
-      )
-    );
-
-  const width = Math.max(
-    48,
-    Math.min(
-      Number.isFinite(
-        rawWidth
-      )
-        ? rawWidth
-        : 58,
-      90
-    )
-  );
-
-  const height = Math.max(
-    120,
-    Math.min(
-      Number.isFinite(
-        rawHeight
-      )
-        ? rawHeight
-        : 175,
-      220
-    )
-  );
-
-  const image =
-    game.image || '';
-
-  const hasImage =
-    Boolean(image);
-
-  const handleKeyDown = (
-    event
-  ) => {
-    if (
-      event.key === 'Enter' ||
-      event.key === ' '
-    ) {
-      event.preventDefault();
-      onClick?.();
-    }
-  };
-
-  const background =
-    hasImage
-      ? `
-        linear-gradient(
-          90deg,
-          rgba(255,255,255,.16) 0%,
-          rgba(255,255,255,.03) 9%,
-          rgba(0,0,0,.06) 48%,
-          rgba(0,0,0,.40) 100%
-        ),
-        url("${image}") center / cover no-repeat
-      `
-      : `
-        linear-gradient(
-          90deg,
-          rgba(255,255,255,.17),
-          rgba(255,255,255,.025) 15%,
-          rgba(0,0,0,.32)
-        ),
-        ${edgeColor}
-      `;
+const GameCard = ({ game, onSelect }) => {
+  const reduceMotion = useReducedMotion();
+  const edgeColor = game?.edgeColor || '#5a4635';
+  const width = clampDimension(game?.boxThickness, 58, 48, 90);
+  const height = clampDimension(game?.boxHeight, 175, 120, 220);
+  const image = String(game?.image || '').trim();
+  const name = String(game?.name || 'Board game').trim();
 
   return (
-    <motion.div
-      role="button"
-      tabIndex={0}
-      aria-label={`Mở hướng dẫn ${game.name}`}
-      onClick={onClick}
-      onKeyDown={handleKeyDown}
-      whileHover={{
-        y: -2,
-        scale: 1.01,
-      }}
-      whileTap={{
-        y: 2,
-        scale: 0.97,
-      }}
-      transition={{
-        type: 'spring',
-        stiffness: 450,
-        damping: 25,
-      }}
+    <motion.button
+      type="button"
+      aria-label={`Mở hướng dẫn ${name}`}
+      onClick={() => onSelect?.(game)}
+      whileHover={reduceMotion ? undefined : { y: -2, scale: 1.01 }}
+      whileTap={reduceMotion ? undefined : { y: 2, scale: 0.97 }}
+      transition={
+        reduceMotion
+          ? { duration: 0 }
+          : { type: 'spring', stiffness: 450, damping: 25 }
+      }
       className="game-card"
       style={{
         width,
         minWidth: width,
         height,
+        '--game-edge-color': edgeColor,
       }}
     >
-      <div
-        className="game-card-face"
-        style={{
-          backgroundColor:
-            edgeColor,
-          background,
-        }}
-      >
-        <span
-          className="game-card-highlight-left"
-          aria-hidden="true"
-        />
+      <span className="game-card-face">
+        {image && (
+          <img
+            src={image}
+            alt=""
+            aria-hidden="true"
+            className="game-card-image"
+            loading="lazy"
+            decoding="async"
+            onError={(event) => {
+              event.currentTarget.hidden = true;
+            }}
+          />
+        )}
 
-        <span
-          className="game-card-shadow-right"
-          aria-hidden="true"
-        />
+        <span className="game-card-image-shade" aria-hidden="true" />
+        <span className="game-card-highlight-left" aria-hidden="true" />
+        <span className="game-card-shadow-right" aria-hidden="true" />
+        <span className="game-card-edge-bottom" aria-hidden="true" />
+        <span className="game-card-title">{name}</span>
+      </span>
 
-        <span
-          className="game-card-edge-bottom"
-          aria-hidden="true"
-        />
-
-        <span className="game-card-title">
-          {game.name}
-        </span>
-      </div>
-
-      <span
-        className="game-card-contact-shadow"
-        aria-hidden="true"
-      />
-    </motion.div>
+      <span className="game-card-contact-shadow" aria-hidden="true" />
+    </motion.button>
   );
 };
 
-export default GameCard;
+export default memo(GameCard);

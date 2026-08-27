@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <title>Noburi Soul Station</title>
+  <rect width="512" height="512" fill="#0b0c0e"/>
+  <rect x="64" y="64" width="384" height="384" rx="112" fill="#a60000"/>
+  <g fill="#fffaf0">
+    <path d="M256 246c-39 0-72-30-72-68 0-31 21-54 50-54 38 0 47 41 22 122Z"/>
+    <path d="M266 256c0-39 30-72 68-72 31 0 54 21 54 50 0 38-41 47-122 22Z"/>
+    <path d="M256 266c39 0 72 30 72 68 0 31-21 54-50 54-38 0-47-41-22-122Z"/>
+    <path d="M246 256c0 39-30 72-68 72-31 0-54-21-54-50 0-38 41-47 122-22Z"/>
+  </g>
+  <circle cx="256" cy="256" r="16" fill="#f59e0b"/>
+</svg>

@@ -1,0 +1,704 @@
+.game-recommender-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10500;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  pointer-events: auto;
+}
+
+.game-recommender-backdrop {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: rgba(0, 0, 0, 0.78);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.game-recommender-sheet {
+  position: relative;
+  z-index: 1;
+  width: min(720px, 100%);
+  max-height: min(92vh, 900px);
+  max-height: min(92svh, 900px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  border-bottom: 0;
+  border-radius: 30px 30px 0 0;
+  background:
+    radial-gradient(circle at 18% -8%, rgba(245, 158, 11, 0.17), transparent 38%),
+    linear-gradient(180deg, #202026 0%, #111216 100%);
+  color: #f4f4f5;
+  box-shadow:
+    0 -26px 80px rgba(0, 0, 0, 0.62),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  touch-action: pan-y;
+}
+
+.game-recommender-handle {
+  width: 46px;
+  height: 5px;
+  flex: 0 0 auto;
+  margin: 10px auto 2px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.game-recommender-header {
+  min-height: 76px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 20px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.075);
+}
+
+.game-recommender-title-wrap {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.game-recommender-icon {
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(245, 158, 11, 0.24);
+  border-radius: 14px;
+  background: linear-gradient(145deg, rgba(245, 158, 11, 0.16), rgba(245, 158, 11, 0.06));
+  color: #fbbf24;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.game-recommender-eyebrow {
+  display: block;
+  margin-bottom: 3px;
+  color: #d6a95d;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+}
+
+.game-recommender-header h2 {
+  margin: 0;
+  overflow: hidden;
+  color: #fafaf9;
+  font-size: clamp(20px, 5vw, 26px);
+  line-height: 1.05;
+  letter-spacing: -0.035em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.game-recommender-close {
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.055);
+  color: #e4e4e7;
+}
+
+.game-recommender-close:hover {
+  background: rgba(255, 255, 255, 0.09);
+}
+
+.game-recommender-scroll {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 20px 20px calc(24px + env(safe-area-inset-bottom));
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.16) transparent;
+}
+
+.game-recommender-form,
+.game-recommender-results {
+  width: min(640px, 100%);
+  margin: 0 auto;
+}
+
+.game-recommender-intro {
+  margin: 0 0 16px;
+  color: #b4b4bd;
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.game-recommender-field {
+  margin-bottom: 13px;
+  padding: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.085);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.038);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.025);
+}
+
+.game-recommender-field-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.game-recommender-field-label > span {
+  width: 36px;
+  height: 36px;
+  flex: 0 0 36px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  background: rgba(245, 158, 11, 0.1);
+  color: #fbbf24;
+}
+
+.game-recommender-field-label h3 {
+  margin: 1px 0 2px;
+  color: #f4f4f5;
+  font-size: 15px;
+}
+
+.game-recommender-field-label p {
+  margin: 0;
+  color: #898991;
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.game-recommender-stepper {
+  width: min(300px, 100%);
+  display: grid;
+  grid-template-columns: 50px minmax(0, 1fr) 50px;
+  gap: 9px;
+  margin: 0 auto;
+}
+
+.game-recommender-stepper > button {
+  min-height: 50px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 15px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #f4f4f5;
+}
+
+.game-recommender-stepper > button:disabled {
+  opacity: 0.35;
+}
+
+.game-recommender-stepper label {
+  min-width: 0;
+  min-height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  border-radius: 15px;
+  background: rgba(245, 158, 11, 0.075);
+  color: #e7c887;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.game-recommender-stepper input {
+  width: 48px;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #fffaf0;
+  font-size: 22px;
+  font-weight: 900;
+  line-height: 1;
+  text-align: right;
+  -moz-appearance: textfield;
+}
+
+.game-recommender-stepper input::-webkit-inner-spin-button,
+.game-recommender-stepper input::-webkit-outer-spin-button {
+  margin: 0;
+  -webkit-appearance: none;
+}
+
+.game-recommender-duration-options {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.game-recommender-duration-options button {
+  min-height: 50px;
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 4px;
+  padding: 8px 5px;
+  border: 1px solid rgba(255, 255, 255, 0.085);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.045);
+  color: #e4e4e7;
+  font-size: 15px;
+  font-weight: 900;
+}
+
+.game-recommender-duration-options button span {
+  color: #9999a2;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.game-recommender-duration-options button.active {
+  border-color: rgba(245, 158, 11, 0.75);
+  background: linear-gradient(180deg, #f59e0b, #d97706);
+  color: #171717;
+  box-shadow: 0 9px 24px rgba(245, 158, 11, 0.18);
+}
+
+.game-recommender-duration-options button.active span {
+  color: rgba(23, 23, 23, 0.68);
+}
+
+.game-recommender-reassurance {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 14px 0;
+  padding: 12px 13px;
+  border: 1px solid rgba(74, 222, 128, 0.16);
+  border-radius: 15px;
+  background: rgba(22, 101, 52, 0.11);
+  color: #86efac;
+}
+
+.game-recommender-reassurance > svg {
+  flex: 0 0 auto;
+  margin-top: 1px;
+}
+
+.game-recommender-reassurance strong,
+.game-recommender-reassurance span {
+  display: block;
+}
+
+.game-recommender-reassurance strong {
+  color: #d1fae5;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.game-recommender-reassurance span {
+  margin-top: 2px;
+  color: #8cae9a;
+  font-size: 11px;
+}
+
+.game-recommender-submit {
+  width: 100%;
+  min-height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: 15px;
+  background: linear-gradient(180deg, #fbbf24, #d97706);
+  color: #171717;
+  font-size: 14px;
+  font-weight: 900;
+  box-shadow: 0 14px 30px rgba(245, 158, 11, 0.2);
+}
+
+.game-recommender-results-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 13px;
+}
+
+.game-recommender-results-summary p {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  color: #a1a1aa;
+  font-size: 11px;
+}
+
+.game-recommender-results-summary strong {
+  color: #e7c887;
+  font-weight: 850;
+}
+
+.game-recommender-edit {
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 11px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  color: #e4e4e7;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.game-recommender-result-list {
+  display: grid;
+  gap: 11px;
+}
+
+.recommendation-card {
+  display: grid;
+  grid-template-columns: 92px minmax(0, 1fr);
+  gap: 14px;
+  padding: 13px;
+  border: 1px solid rgba(255, 255, 255, 0.085);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.038);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.025);
+}
+
+.recommendation-card.fit-best {
+  border-color: rgba(245, 158, 11, 0.26);
+  background:
+    linear-gradient(120deg, rgba(245, 158, 11, 0.08), transparent 48%),
+    rgba(255, 255, 255, 0.038);
+}
+
+.recommendation-card-cover {
+  position: relative;
+  min-height: 118px;
+  overflow: hidden;
+  align-self: start;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  background: var(--recommendation-cover-color, #6b4e36);
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.3);
+}
+
+.recommendation-card-cover-fallback {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: rgba(255, 255, 255, 0.76);
+  background:
+    radial-gradient(circle at 35% 20%, rgba(255, 255, 255, 0.16), transparent 38%),
+    linear-gradient(160deg, transparent, rgba(0, 0, 0, 0.28));
+}
+
+.recommendation-card-cover img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.recommendation-card-content {
+  min-width: 0;
+}
+
+.recommendation-card-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.recommendation-rank-label {
+  display: block;
+  margin-bottom: 3px;
+  color: #b48b4b;
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.recommendation-card h3 {
+  margin: 0;
+  color: #fafaf9;
+  font-size: 18px;
+  line-height: 1.13;
+  letter-spacing: -0.025em;
+}
+
+.recommendation-fit {
+  flex: 0 0 auto;
+  padding: 5px 7px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.055);
+  color: #b4b4bd;
+  font-size: 9px;
+  font-weight: 850;
+  white-space: nowrap;
+}
+
+.recommendation-fit.fit-best {
+  border-color: rgba(245, 158, 11, 0.24);
+  background: rgba(245, 158, 11, 0.1);
+  color: #f6d08d;
+}
+
+.recommendation-fit.fit-good {
+  border-color: rgba(74, 222, 128, 0.18);
+  background: rgba(22, 101, 52, 0.12);
+  color: #a7f3d0;
+}
+
+.recommendation-fit.fit-flexible,
+.recommendation-fit.fit-near {
+  border-color: rgba(96, 165, 250, 0.2);
+  background: rgba(30, 64, 175, 0.11);
+  color: #bfdbfe;
+}
+
+.recommendation-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  margin-top: 8px;
+}
+
+.recommendation-meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: #a1a1aa;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.recommendation-reasons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin: 9px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.recommendation-reasons li {
+  padding: 5px 7px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  color: #c4c4ca;
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.recommendation-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin: 8px 0 0;
+  color: #f5c777;
+  font-size: 10px;
+  line-height: 1.4;
+}
+
+.recommendation-warning svg {
+  flex: 0 0 auto;
+}
+
+.recommendation-select {
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 10px;
+  padding: 0 12px;
+  border: 1px solid rgba(245, 158, 11, 0.28);
+  border-radius: 11px;
+  background: rgba(245, 158, 11, 0.1);
+  color: #f7d491;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.recommendation-select:hover {
+  border-color: rgba(245, 158, 11, 0.45);
+  background: rgba(245, 158, 11, 0.14);
+}
+
+.game-recommender-result-note {
+  margin: 14px 8px 0;
+  color: #777780;
+  font-size: 10px;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.game-recommender-empty {
+  display: grid;
+  place-items: center;
+  min-height: 280px;
+  padding: 24px;
+  border: 1px dashed rgba(255, 255, 255, 0.12);
+  border-radius: 20px;
+  text-align: center;
+}
+
+.game-recommender-empty > span {
+  width: 54px;
+  height: 54px;
+  display: grid;
+  place-items: center;
+  margin-bottom: 11px;
+  border-radius: 17px;
+  background: rgba(245, 158, 11, 0.09);
+  color: #fbbf24;
+}
+
+.game-recommender-empty h3 {
+  margin: 0;
+  color: #f4f4f5;
+  font-size: 18px;
+}
+
+.game-recommender-empty p {
+  max-width: 360px;
+  margin: 8px 0 15px;
+  color: #96969f;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.game-recommender-empty button {
+  min-height: 42px;
+  padding: 0 14px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.07);
+  color: #e4e4e7;
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.game-recommender-sheet .sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (min-width: 620px) {
+  .game-recommender-duration-options {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .game-recommender-sheet {
+    border-radius: 25px 25px 0 0;
+  }
+
+  .game-recommender-header {
+    padding-inline: 14px;
+  }
+
+  .game-recommender-scroll {
+    padding: 16px 14px calc(20px + env(safe-area-inset-bottom));
+  }
+
+  .game-recommender-icon {
+    width: 40px;
+    height: 40px;
+    flex-basis: 40px;
+  }
+
+  .game-recommender-field {
+    padding: 14px;
+    border-radius: 17px;
+  }
+
+  .recommendation-card {
+    grid-template-columns: 78px minmax(0, 1fr);
+    gap: 11px;
+    padding: 11px;
+    border-radius: 17px;
+  }
+
+  .recommendation-card-cover {
+    min-height: 106px;
+    border-radius: 12px;
+  }
+
+  .recommendation-card-heading {
+    display: block;
+  }
+
+  .recommendation-fit {
+    display: inline-block;
+    margin-top: 6px;
+  }
+
+  .recommendation-select {
+    width: 100%;
+  }
+}
+
+@media (max-width: 370px) {
+  .game-recommender-title-wrap {
+    gap: 9px;
+  }
+
+  .game-recommender-icon {
+    display: none;
+  }
+
+  .game-recommender-duration-options {
+    gap: 6px;
+  }
+
+  .game-recommender-duration-options button {
+    min-height: 48px;
+    font-size: 14px;
+  }
+
+  .recommendation-card {
+    grid-template-columns: 70px minmax(0, 1fr);
+    gap: 9px;
+  }
+
+  .recommendation-card-cover {
+    min-height: 98px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .game-recommender-sheet *,
+  .game-recommender-sheet *::before,
+  .game-recommender-sheet *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+

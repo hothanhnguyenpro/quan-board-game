@@ -1,127 +1,197 @@
-import React, {
-  useEffect,
-  useState,
-} from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
-import Library from './components/Library';
-import CheatSheet from './components/CheatSheet';
-import { fetchGameData } from './utils/dataFetcher';
+import AnnouncementModal from './components/AnnouncementModal.jsx';
+import CheatSheet from './components/CheatSheet.jsx';
+import Library from './components/Library.jsx';
+import MeetupSheet from './components/MeetupSheet.jsx';
+import { APP_CONFIG } from './config.js';
+import { fetchGameData } from './utils/dataFetcher.js';
+import { fetchMeetupData } from './utils/meetupFetcher.js';
+
+const scrollToTop = (behavior = 'auto') => {
+  if (typeof window !== 'undefined') {
+    window.scrollTo({ top: 0, behavior });
+  }
+};
+
+const hasMeetupSource = () =>
+  Boolean(
+    APP_CONFIG?.meetup?.enabled &&
+      String(APP_CONFIG?.meetup?.sheetUrl || '').trim()
+  );
 
 const App = () => {
   const [games, setGames] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [gamesLoading, setGamesLoading] = useState(true);
+  const [gamesError, setGamesError] = useState('');
+  const [gamesWarning, setGamesWarning] = useState('');
   const [filter, setFilter] = useState({});
-  const [selectedGame, setSelectedGame] =
-    useState(null);
+  const [selectedGame, setSelectedGame] = useState(null);
+  const [recommendationPreferences, setRecommendationPreferences] = useState({
+    players: 4,
+    durationMinutes: 60,
+  });
+
+  const [isMeetupOpen, setMeetupOpen] = useState(false);
+  const [meetups, setMeetups] = useState([]);
+  const [meetupsLoading, setMeetupsLoading] = useState(false);
+  const [meetupsError, setMeetupsError] = useState('');
+  const [meetupReloadKey, setMeetupReloadKey] = useState(0);
+  const meetupsFetchedRef = useRef(false);
 
   useEffect(() => {
-    let cancelled = false;
+    const controller = new AbortController();
 
-    const loadData = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-
-        const data =
-          await fetchGameData();
-
-        if (cancelled) {
-          return;
+    fetchGameData({
+      signal: controller.signal,
+      onWarning: (message) => {
+        if (!controller.signal.aborted) {
+          setGamesWarning(message);
         }
-
-        setGames(data);
-      } catch (err) {
-        if (cancelled) {
-          return;
+      },
+    })
+      .then((data) => {
+        if (!controller.signal.aborted) {
+          setGames(data);
+          setGamesError('');
         }
+      })
+      .catch((error) => {
+        if (error?.name === 'AbortError') return;
 
-        console.error(
-          '[App] Lỗi tải dữ liệu:',
-          err
+        console.error('[App] Lỗi tải dữ liệu game:', error);
+        setGamesError(
+          error instanceof Error ? error.message : 'Không thể tải dữ liệu game.'
         );
-
-        setError(
-          err instanceof Error
-            ? err.message
-            : 'Không thể tải dữ liệu game.'
-        );
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) {
+          setGamesLoading(false);
         }
-      }
-    };
+      });
 
-    loadData();
-
-    return () => {
-      cancelled = true;
-    };
+    return () => controller.abort();
   }, []);
 
-  const handleFilterChange =
-    (newFilter) => {
-      setFilter(
-        newFilter || {}
+  useEffect(() => {
+    if (!isMeetupOpen || !hasMeetupSource() || meetupsFetchedRef.current) {
+      return undefined;
+    }
+
+    const controller = new AbortController();
+
+    fetchMeetupData({ signal: controller.signal })
+      .then((data) => {
+        if (!controller.signal.aborted) {
+          meetupsFetchedRef.current = true;
+          setMeetups(data);
+          setMeetupsError('');
+        }
+      })
+      .catch((error) => {
+        if (error?.name === 'AbortError') return;
+
+        console.error('[App] Lỗi tải lịch ghép tụ:', error);
+        setMeetupsError(
+          APP_CONFIG?.meetup?.loadErrorMessage ||
+            'Không thể tải lịch ghép tụ. Vui lòng thử lại sau.'
+        );
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) {
+          setMeetupsLoading(false);
+        }
+      });
+
+    return () => controller.abort();
+  }, [isMeetupOpen, meetupReloadKey]);
+
+  const handleFilterChange = useCallback((nextFilter) => {
+    setFilter(nextFilter || {});
+  }, []);
+
+  const handleSelectGame = useCallback((game) => {
+    if (!game) return;
+    setSelectedGame(game);
+    scrollToTop('smooth');
+  }, []);
+
+  const handleBackToLibrary = useCallback(() => {
+    setSelectedGame(null);
+    scrollToTop('auto');
+  }, []);
+
+  const openMeetup = useCallback(() => {
+    if (!APP_CONFIG?.meetup?.enabled) return;
+
+    if (hasMeetupSource() && !meetupsFetchedRef.current) {
+      setMeetupsLoading(true);
+      setMeetupsError('');
+    }
+
+    setMeetupOpen(true);
+  }, []);
+
+  const closeMeetup = useCallback(() => {
+    setMeetupOpen(false);
+  }, []);
+
+  const retryMeetups = useCallback(() => {
+    if (!hasMeetupSource()) return;
+
+    meetupsFetchedRef.current = false;
+    setMeetupsLoading(true);
+    setMeetupsError('');
+    setMeetupReloadKey((value) => value + 1);
+  }, []);
+
+  const handleRegistrationSuccess = useCallback((result) => {
+    if (result?.meetupId) {
+      setMeetups((current) =>
+        current.map((meetup) =>
+          String(meetup.id) === String(result.meetupId)
+            ? {
+                ...meetup,
+                status: result.status || meetup.status,
+                currentPlayers:
+                  Number.isInteger(result.currentPlayers)
+                    ? result.currentPlayers
+                    : meetup.currentPlayers,
+              }
+            : meetup
+        )
       );
-    };
+    }
 
-  const handleSelectGame =
-    (game) => {
-      setSelectedGame(game);
-      window.scrollTo({
-        top: 0,
-        behavior: 'smooth',
-      });
-    };
+    // Published Google Sheet CSV can lag behind Apps Script writes. Keep the
+    // backend-confirmed local result instead of immediately refetching stale
+    // CSV and accidentally reverting a meetup from "full" back to "active".
+    // The next time the meetup sheet is opened we allow a fresh fetch.
+    meetupsFetchedRef.current = false;
+  }, []);
 
-  const handleBackToLibrary =
-    () => {
-      setSelectedGame(null);
-      window.scrollTo({
-        top: 0,
-        behavior: 'instant',
-      });
-    };
-
-  if (loading) {
+  if (gamesLoading) {
     return (
-      <div className="app-state">
-        <div className="loading-mark">
+      <div className="app-state" role="status" aria-live="polite">
+        <div className="loading-mark" aria-hidden="true">
           <div className="loading-spinner" />
         </div>
-
-        <h1>
-          Đang mở tủ game
-        </h1>
-
-        <p>
-          Đang tải danh sách game...
-        </p>
+        <h1>Đang mở tủ game</h1>
+        <p>Đang tải danh sách game...</p>
       </div>
     );
   }
 
-  if (error && !games.length) {
+  if (gamesError && !games.length) {
     return (
       <div className="app-state">
-        <div className="state-icon">
-          ⚠️
-        </div>
-
-        <h1>
-          Không thể tải tủ game
-        </h1>
-
-        <p>{error}</p>
-
+        <div className="state-icon" aria-hidden="true">⚠️</div>
+        <h1>Không thể tải tủ game</h1>
+        <p>{gamesError}</p>
         <button
           type="button"
           className="state-button"
-          onClick={() =>
-            window.location.reload()
-          }
+          onClick={() => window.location.reload()}
         >
           Thử lại
         </button>
@@ -134,22 +204,33 @@ const App = () => {
       {selectedGame ? (
         <CheatSheet
           game={selectedGame}
-          onBack={
-            handleBackToLibrary
-          }
+          onBack={handleBackToLibrary}
         />
       ) : (
         <Library
           games={games}
           filter={filter}
-          onFilterChange={
-            handleFilterChange
-          }
-          onSelectGame={
-            handleSelectGame
-          }
+          onFilterChange={handleFilterChange}
+          onSelectGame={handleSelectGame}
+          onOpenMeetup={openMeetup}
+          dataWarning={gamesWarning}
+          recommendationPreferences={recommendationPreferences}
+          onRecommendationPreferencesChange={setRecommendationPreferences}
         />
       )}
+
+      <MeetupSheet
+        isOpen={isMeetupOpen}
+        onClose={closeMeetup}
+        games={games}
+        meetups={meetups}
+        loading={meetupsLoading}
+        error={meetupsError}
+        onRetry={retryMeetups}
+        onRegistrationSuccess={handleRegistrationSuccess}
+      />
+
+      <AnnouncementModal onOpenMeetup={openMeetup} />
     </div>
   );
 };
