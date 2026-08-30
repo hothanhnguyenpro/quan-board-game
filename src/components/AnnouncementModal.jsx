@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { ArrowRight, X } from 'lucide-react';
@@ -48,10 +48,6 @@ const AnnouncementModal = ({ onOpenMeetup }) => {
   const [isOpen, setIsOpen] = useState(
     () => Boolean(announcement.enabled) && !wasSeenInThisSession(announcement)
   );
-
-  useEffect(() => {
-    if (isOpen) markSeenInThisSession(announcement);
-  }, [announcement, isOpen]);
 
   const close = useCallback(() => {
     if (announcement.dismissible !== false) {
@@ -142,17 +138,18 @@ const AnnouncementModal = ({ onOpenMeetup }) => {
                 reduceMotion
                   ? undefined
                   : {
-                      rotate: [0, -4, 4, -2, 2, 0],
-                      y: [0, -2, 0],
+                      rotate: [0, -7, 6, -5, 4, -2, 0],
+                      x: [0, -2, 2, -1, 1, 0, 0],
+                      y: [0, -2, 0, -1, 0, -1, 0],
                     }
               }
               transition={
                 reduceMotion
                   ? undefined
                   : {
-                      duration: 1.7,
+                      duration: 1.45,
                       repeat: Infinity,
-                      repeatDelay: 3.2,
+                      repeatDelay: 1.9,
                       ease: 'easeInOut',
                     }
               }

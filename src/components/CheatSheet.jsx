@@ -9,7 +9,11 @@ import {
   Sparkles,
   Trophy,
   UsersRound,
+  Wrench,
 } from 'lucide-react';
+
+import { APP_CONFIG } from '../config.js';
+import GameCompanionSheet from './GameCompanionSheet.jsx';
 
 const toList = (value) => {
   if (Array.isArray(value)) {
@@ -57,7 +61,7 @@ const Section = ({ icon, title, children, tone = 'default' }) => (
 
 const GameCover = ({ game }) => {
   const [imageFailed, setImageFailed] = useState(false);
-  const image = String(game?.image || '').trim();
+  const image = String(game?.detailImage || game?.image || '').trim();
   const shouldShowImage = image && !imageFailed;
 
   if (shouldShowImage) {
@@ -86,6 +90,7 @@ const GameCover = ({ game }) => {
 
 const CheatSheet = ({ game, onBack }) => {
   const reduceMotion = useReducedMotion();
+  const [isCompanionOpen, setCompanionOpen] = useState(false);
   if (!game) {
     return (
       <div className="app-state">
@@ -142,6 +147,17 @@ const CheatSheet = ({ game, onBack }) => {
                 </InfoPill>
               )}
             </div>
+
+            {APP_CONFIG?.gameCompanion?.enabled === true && (
+              <button
+                type="button"
+                className="game-tools-launch"
+                onClick={() => setCompanionOpen(true)}
+              >
+                <Wrench size={17} aria-hidden="true" />
+                {APP_CONFIG?.gameCompanion?.buttonLabel || 'Công cụ trong ván'}
+              </button>
+            )}
           </div>
         </section>
 
@@ -216,6 +232,13 @@ const CheatSheet = ({ game, onBack }) => {
           </motion.div>
         </div>
       </div>
+
+      <GameCompanionSheet
+        key={game.id || game.name}
+        game={game}
+        isOpen={isCompanionOpen}
+        onClose={() => setCompanionOpen(false)}
+      />
     </main>
   );
 };

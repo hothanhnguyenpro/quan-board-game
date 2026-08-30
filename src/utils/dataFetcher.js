@@ -216,14 +216,22 @@ const normalizeGame = (rawGame, index) => {
   const time = cleanText(get('time'));
   const playerRange = parsePlayerRange(players);
   const timeRange = parseTimeRange(time);
+  const shelfImage = getDirectImageUrl(
+    get('image', 'imageurl', 'imageUrl', 'img')
+  );
+  const detailImage =
+    getDirectImageUrl(
+      get('thumbnail', 'detailimage', 'detailImage', 'cover')
+    ) || shelfImage;
 
   return {
     id: cleanText(get('id')) || `game-${index + 1}`,
     name,
     alias: cleanText(get('alias', 'altname', 'altName')),
-    image: getDirectImageUrl(
-      get('image', 'thumbnail', 'cover', 'imageurl', 'imageUrl', 'img')
-    ),
+    // `image` is the narrow shelf-spine artwork. `detailImage` keeps the
+    // original box cover for the Cheat Sheet, where a spine crop looks poor.
+    image: shelfImage || detailImage,
+    detailImage,
     coverColor: cleanText(get('covercolor', 'coverColor')),
     players,
     minPlayers: playerRange.min,

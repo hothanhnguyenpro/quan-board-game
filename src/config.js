@@ -16,7 +16,7 @@ export const APP_CONFIG = {
   brand: {
     eyebrow: 'BOARD GAME CAFE',
     libraryTitle: 'Tìm game cho bàn của bạn',
-    librarySubtitle: 'Chọn số người, thời gian hoặc tìm thẳng tên game.',
+    librarySubtitle: 'Tìm theo tên game, hoặc mở Bộ lọc khi bạn cần.',
     searchPlaceholder: 'Tìm tên game...',
     logoUrl: '/logo.png',
   },
@@ -46,6 +46,22 @@ export const APP_CONFIG = {
     },
   },
 
+  waitlist: {
+    enabled: true,
+    buttonLabel: 'Chờ bàn',
+    pollIntervalMs: 15000,
+  },
+
+  tableSupport: {
+    enabled: true,
+    buttonLabel: 'Cần hỗ trợ',
+  },
+
+  gameCompanion: {
+    enabled: true,
+    buttonLabel: 'Công cụ trong ván',
+  },
+
   meetup: {
     enabled: true,
     buttonLabel: 'Ghép tụ',
@@ -62,73 +78,43 @@ export const APP_CONFIG = {
       closed: 'Đã đóng đăng ký',
       cancelled: 'Đã hủy',
     },
-registration: {
-  enabled: true,
-
-  submitUrl:
-    'https://script.google.com/macros/s/AKfycbysEgivL1FaTVRyev5sqzBIv65MUFajECs8EbR34fBmXv-IGfPYSEHO007xtxjpyoCf/exec',
-
-  timeoutMs: 20000,
-
-  allowedMessageOrigins: [
-    'https://script.google.com',
-    '*.googleusercontent.com',
-  ],
-
-  openButtonText:
-    'Đăng ký',
-
-  buttonText:
-    'Gửi đăng ký',
-
-  successMessage:
-    'Đăng ký thành công! Quán sẽ liên hệ với bạn.',
-
-  errorMessage:
-    'Không thể gửi đăng ký.',
-
-  timeoutMessage:
-    'Hệ thống chưa xác nhận đăng ký. Vui lòng thử lại hoặc liên hệ quán.',
-
-  notConfiguredMessage:
-    'Chưa cấu hình nơi nhận đăng ký.',
-
-  fields: {
-    name: {
-      label:
-        'Tên hoặc biệt danh *',
-      placeholder:
-        'Ví dụ: Nguyên',
+    registration: {
+      enabled: true,
+      submitUrl:
+        'https://script.google.com/macros/s/AKfycbw4R4sOeHc1S1DizDy4cIORsEiI-8KQ8kdw6F2M29eJoIXyzLKYnxzQ-kc_VPEt4E53/exec',
+      timeoutMs: 20000,
+      openButtonText: 'Đăng ký',
+      buttonText: 'Gửi đăng ký',
+      successMessage: 'Đăng ký thành công! Quán sẽ liên hệ với bạn.',
+      errorMessage: 'Không thể gửi đăng ký.',
+      notConfiguredMessage: 'Chưa cấu hình nơi nhận đăng ký.',
+      fields: {
+        name: {
+          label: 'Tên hoặc biệt danh *',
+          placeholder: 'Ví dụ: Nguyên',
+        },
+        phone: {
+          label: 'Số điện thoại *',
+          placeholder: 'Ví dụ: 09xxxxxxxx',
+        },
+        facebook: {
+          label: 'Link Facebook',
+          placeholder: 'https://facebook.com/...',
+        },
+        companions: {
+          label: 'Số lượng người đi cùng *',
+          placeholder: 'Ví dụ: 0',
+        },
+      },
     },
-
-    phone: {
-      label:
-        'Số điện thoại *',
-      placeholder:
-        'Ví dụ: 09xxxxxxxx',
-    },
-
-    facebook: {
-      label:
-        'Link Facebook',
-      placeholder:
-        'https://facebook.com/...',
-    },
-
-    companions: {
-      label:
-        'Số lượng người đi cùng *',
-      placeholder:
-        'Ví dụ: 0',
-    },
-  },
-},
   },
 
   announcement: {
     enabled: true,
     id: 'weekly-meetups-2026-w35',
-    showOncePerSession: true,
+    // Show once for every fresh page load. Closing it only affects the current
+    // React mount, so opening a Cheat Sheet and returning will not show it again.
+    showOncePerSession: false,
     title: '🎲 Có kèo mới!',
     message: 'Tuần này quán có những tụ game mới. Ghé xem và chọn bàn hợp gu nhé!',
     buttonText: 'Xem tụ tuần này',

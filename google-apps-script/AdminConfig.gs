@@ -16,8 +16,11 @@ const ADMIN_AUTH_CONFIG = Object.freeze({
   authVersionProperty: 'BOARD_GAME_CAFE_ADMIN_AUTH_VERSION',
   sessionCachePrefix: 'bgc:admin:session:',
   loginThrottleCachePrefix: 'bgc:admin:login:',
-  sessionTtlSeconds: 60 * 60,
-  passwordHashRounds: 2000,
+  sessionTtlSeconds: 6 * 60 * 60,
+  // Utilities.computeDigest is a remote Apps Script primitive; thousands of
+  // sequential calls make each login take many seconds. A strong 12+ character
+  // password, per-installation salt and throttling remain mandatory.
+  passwordHashRounds: 120,
   minimumPasswordLength: 12,
   maximumPasswordLength: 256,
   maximumLoginFailures: 8,
@@ -161,6 +164,23 @@ function adminLogin(password) {
       code: 'ADMIN_INVALID_CREDENTIALS',
       message: 'Mật khẩu quản trị không đúng.',
     };
+  }
+
+  // Transparently migrate older, much slower hashes after one valid login.
+  if (rounds !== ADMIN_AUTH_CONFIG.passwordHashRounds) {
+    properties.setProperties(
+      {
+        [ADMIN_AUTH_CONFIG.passwordHashProperty]: adminDerivePasswordHash_(
+          suppliedPassword,
+          passwordSalt,
+          ADMIN_AUTH_CONFIG.passwordHashRounds
+        ),
+        [ADMIN_AUTH_CONFIG.passwordRoundsProperty]: String(
+          ADMIN_AUTH_CONFIG.passwordHashRounds
+        ),
+      },
+      false
+    );
   }
 
   CacheService.getScriptCache().remove(throttleKey);

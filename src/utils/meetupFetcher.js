@@ -59,6 +59,18 @@ export const normalizeMeetup = (row, index = 0) => {
   return {
     id: clean(get('id')) || `meetup-${index + 1}`,
     gameId: clean(get('gameId', 'game_id')),
+    gameName: clean(get('gameName', 'game_name', 'name', 'tenGame')),
+    leaderName: clean(
+      get(
+        'leaderName',
+        'leader_name',
+        'leader',
+        'host',
+        'meetupLeader',
+        'tenLeader',
+        'truongNhom'
+      )
+    ),
     startTime: clean(get('startTime', 'start_time', 'datetime', 'dateTime')),
     requiredPlayers: parseOptionalInteger(
       get('requiredPlayers', 'required_players', 'playersNeeded', 'capacity')

@@ -5,6 +5,7 @@ import {
   CheckCircle2,
   DoorOpen,
   Send,
+  UserRound,
   UsersRound,
 } from 'lucide-react';
 
@@ -145,6 +146,7 @@ const MeetupRegistrationForm = ({
           gameName: game?.name || '',
           startTime: meetup.startTime || '',
           room: meetup.room || '',
+          leaderName: meetup.leaderName || '',
           name: clean(form.name),
           phone: clean(form.phone),
           facebook: clean(form.facebook),
@@ -211,6 +213,11 @@ const MeetupRegistrationForm = ({
           <span className="eyebrow">{config?.title || 'Đăng ký tham gia'}</span>
           <h3>{game?.name}</h3>
           <p>{formatted.full}</p>
+
+          <p className="meetup-selected-meta">
+            <UserRound size={13} />
+            Leader: {meetup.leaderName || 'Đang cập nhật'}
+          </p>
 
           {meetup.room && (
             <p className="meetup-selected-meta">
@@ -323,6 +330,7 @@ const MeetupRegistrationForm = ({
         <CheckInPass
           checkInCode={result.data?.checkInCode}
           gameName={game?.name}
+          adminBaseUrl={result.data?.checkInUrl || submitUrl}
         />
       )}
 

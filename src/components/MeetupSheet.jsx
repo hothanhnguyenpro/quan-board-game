@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
-import { AlertCircle, CalendarDays, RefreshCw, X } from 'lucide-react';
+import { AlertCircle, CalendarDays, RefreshCw, Search, X } from 'lucide-react';
 
 import { APP_CONFIG } from '../config.js';
 import { useModalBehavior } from '../hooks/useModalBehavior.js';
@@ -9,6 +9,7 @@ import {
   isDateInCurrentWeek,
   parseLocalDate,
 } from '../utils/dateUtils.js';
+import { normalizeText } from '../utils/gameUtils.js';
 import MeetupCard from './MeetupCard.jsx';
 import MeetupRegistrationForm from './MeetupRegistrationForm.jsx';
 
@@ -36,6 +37,7 @@ const MeetupSheet = ({
   const reduceMotion = useReducedMotion();
   const [selectedMeetup, setSelectedMeetup] = useState(null);
   const [registrationBusy, setRegistrationBusy] = useState(false);
+  const [meetupQuery, setMeetupQuery] = useState('');
 
   const gameById = useMemo(() => {
     return new Map(
@@ -77,10 +79,24 @@ const MeetupSheet = ({
     };
   }, [gameById, meetups, showOnlyCurrentWeek]);
 
+  const filteredMeetups = useMemo(() => {
+    const query = normalizeText(meetupQuery);
+    if (!query) return preparedMeetups;
+
+    return preparedMeetups.filter((meetup) =>
+      normalizeText(
+        [meetup.game?.name, meetup.gameName, meetup.leaderName, meetup.room]
+          .filter(Boolean)
+          .join(' ')
+      ).includes(query)
+    );
+  }, [meetupQuery, preparedMeetups]);
+
   const handleClose = useCallback(() => {
     if (registrationBusy) return;
 
     setSelectedMeetup(null);
+    setMeetupQuery('');
     setRegistrationBusy(false);
     onClose?.();
   }, [onClose, registrationBusy]);
@@ -212,8 +228,21 @@ const MeetupSheet = ({
                 )}
 
                 {!loading && !error && preparedMeetups.length > 0 && (
+                  <label className="meetup-filter">
+                    <Search size={17} aria-hidden="true" />
+                    <input
+                      type="search"
+                      value={meetupQuery}
+                      onChange={(event) => setMeetupQuery(event.target.value)}
+                      placeholder="Tìm tên leader, game hoặc phòng..."
+                      aria-label="Tìm tụ theo tên leader, game hoặc phòng"
+                    />
+                  </label>
+                )}
+
+                {!loading && !error && filteredMeetups.length > 0 && (
                   <div className="meetup-list">
-                    {preparedMeetups.map((meetup, index) => (
+                    {filteredMeetups.map((meetup, index) => (
                       <MeetupCard
                         key={
                           clean(meetup.id) ||
@@ -232,6 +261,17 @@ const MeetupSheet = ({
                     ))}
                   </div>
                 )}
+
+                {!loading &&
+                  !error &&
+                  preparedMeetups.length > 0 &&
+                  filteredMeetups.length === 0 && (
+                    <div className="meetup-state">
+                      <Search size={28} aria-hidden="true" />
+                      <h3>Không thấy tụ phù hợp</h3>
+                      <p>Thử tìm bằng tên leader, tên game hoặc phòng khác.</p>
+                    </div>
+                  )}
 
                 {!loading && !error && invalidMeetupCount > 0 && (
                   <p className="meetup-data-note">

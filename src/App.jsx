@@ -4,6 +4,7 @@ import AnnouncementModal from './components/AnnouncementModal.jsx';
 import CheatSheet from './components/CheatSheet.jsx';
 import Library from './components/Library.jsx';
 import MeetupSheet from './components/MeetupSheet.jsx';
+import TableSupport from './components/TableSupport.jsx';
 import { APP_CONFIG } from './config.js';
 import { fetchGameData } from './utils/dataFetcher.js';
 import { fetchMeetupData } from './utils/meetupFetcher.js';
@@ -231,6 +232,12 @@ const App = () => {
       />
 
       <AnnouncementModal onOpenMeetup={openMeetup} />
+
+      <TableSupport
+        enabled={APP_CONFIG?.tableSupport?.enabled === true}
+        submitUrl={APP_CONFIG?.meetup?.registration?.submitUrl || ''}
+        game={selectedGame}
+      />
     </div>
   );
 };

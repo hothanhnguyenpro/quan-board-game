@@ -2,6 +2,7 @@ import {
   CalendarDays,
   Clock3,
   DoorOpen,
+  UserRound,
   UsersRound,
 } from 'lucide-react';
 
@@ -82,6 +83,10 @@ const MeetupCard = ({
         </div>
 
         <div className="meetup-meta">
+          <span className="meetup-leader">
+            <UserRound size={15} aria-hidden="true" />
+            Leader: {meetup.leaderName || 'Đang cập nhật'}
+          </span>
           <span>
             <CalendarDays size={15} aria-hidden="true" />
             {formatted.date}

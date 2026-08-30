@@ -1,26 +1,29 @@
-import { memo } from 'react';
+import { memo, useState } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 
-const clampDimension = (value, fallback, min, max) => {
-  const parsed = Number.parseFloat(String(value ?? ''));
-  const safeValue = Number.isFinite(parsed) ? parsed : fallback;
-  return Math.max(min, Math.min(safeValue, max));
-};
+const getInitials = (name) =>
+  String(name || 'Board Game')
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join('')
+    .toUpperCase();
 
 const GameCard = ({ game, onSelect }) => {
   const reduceMotion = useReducedMotion();
-  const edgeColor = game?.edgeColor || '#5a4635';
-  const width = clampDimension(game?.boxThickness, 58, 48, 90);
-  const height = clampDimension(game?.boxHeight, 175, 120, 220);
+  const edgeColor = game?.edgeColor || game?.coverColor || '#5a4635';
   const image = String(game?.image || '').trim();
   const name = String(game?.name || 'Board game').trim();
+  const [failedImage, setFailedImage] = useState('');
+  const imageFailed = !image || failedImage === image;
 
   return (
     <motion.button
       type="button"
       aria-label={`Mở hướng dẫn ${name}`}
       onClick={() => onSelect?.(game)}
-      whileHover={reduceMotion ? undefined : { y: -2, scale: 1.01 }}
+      whileHover={reduceMotion ? undefined : { y: -3, scale: 1.015 }}
       whileTap={reduceMotion ? undefined : { y: 2, scale: 0.97 }}
       transition={
         reduceMotion
@@ -29,14 +32,16 @@ const GameCard = ({ game, onSelect }) => {
       }
       className="game-card"
       style={{
-        width,
-        minWidth: width,
-        height,
         '--game-edge-color': edgeColor,
       }}
     >
       <span className="game-card-face">
-        {image && (
+        <span className="game-card-fallback" aria-hidden="true">
+          <strong>{getInitials(name)}</strong>
+          <small>{name}</small>
+        </span>
+
+        {image && !imageFailed && (
           <img
             src={image}
             alt=""
@@ -44,9 +49,8 @@ const GameCard = ({ game, onSelect }) => {
             className="game-card-image"
             loading="lazy"
             decoding="async"
-            onError={(event) => {
-              event.currentTarget.hidden = true;
-            }}
+            sizes="92px"
+            onError={() => setFailedImage(image)}
           />
         )}
 

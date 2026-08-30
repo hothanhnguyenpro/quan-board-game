@@ -1,7 +1,8 @@
-import { useDeferredValue, useState } from 'react';
+import { useDeferredValue, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import {
   RotateCcw,
+  Hourglass,
   Search,
   SlidersHorizontal,
   Sparkles,
@@ -17,6 +18,7 @@ import GameCard from './GameCard.jsx';
 import GameRecommenderSheet from './GameRecommenderSheet.jsx';
 import SocialLinks from './SocialLinks.jsx';
 import TablePulse from './TablePulse.jsx';
+import WaitlistSheet from './WaitlistSheet.jsx';
 
 const SHELF_ROWS = 4;
 
@@ -46,6 +48,7 @@ const Library = ({
 }) => {
   const [isFilterSheetOpen, setFilterSheetOpen] = useState(false);
   const [isRecommenderOpen, setRecommenderOpen] = useState(false);
+  const [isWaitlistOpen, setWaitlistOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const deferredSearchQuery = useDeferredValue(searchQuery);
   const { tableCode } = useTableContext();
@@ -53,22 +56,30 @@ const Library = ({
   const timeFilter = filter?.time ?? '';
   const playerFilter = filter?.players ?? '';
 
-  const filteredGames = filterGames(games, {
-    query: deferredSearchQuery,
-    time: timeFilter,
-    players: playerFilter,
-  });
-
-  const shelves = createShelves(filteredGames);
+  const filteredGames = useMemo(
+    () =>
+      filterGames(games, {
+        query: deferredSearchQuery,
+        time: timeFilter,
+        players: playerFilter,
+      }),
+    [games, deferredSearchQuery, timeFilter, playerFilter]
+  );
+  const shelves = useMemo(() => createShelves(filteredGames), [filteredGames]);
   const activeFilterCount = Number(Boolean(timeFilter)) + Number(Boolean(playerFilter));
   const hasActiveFilter = Boolean(timeFilter || playerFilter || searchQuery.trim());
   const brand = APP_CONFIG?.brand || {};
   const meetupEnabled = APP_CONFIG?.meetup?.enabled === true;
+  const waitlistEnabled = APP_CONFIG?.waitlist?.enabled === true;
   const operationalUrl = APP_CONFIG?.meetup?.registration?.submitUrl || '';
+
+  const updateFilter = (nextFilter) => {
+    onFilterChange?.(nextFilter);
+  };
 
   const clearAll = () => {
     setSearchQuery('');
-    onFilterChange?.({});
+    updateFilter({});
   };
 
   return (
@@ -84,6 +95,16 @@ const Library = ({
               >
                 <UsersRound size={18} aria-hidden="true" />
                 <span>{APP_CONFIG?.meetup?.buttonLabel || 'Ghép tụ'}</span>
+              </button>
+            )}
+            {waitlistEnabled && (
+              <button
+                type="button"
+                className="waitlist-launch"
+                onClick={() => setWaitlistOpen(true)}
+              >
+                <Hourglass size={18} aria-hidden="true" />
+                <span>{APP_CONFIG?.waitlist?.buttonLabel || 'Chờ bàn'}</span>
               </button>
             )}
           </div>
@@ -129,6 +150,7 @@ const Library = ({
               </button>
             )}
           </div>
+
         </header>
 
         <section className="smart-pick-panel" aria-labelledby="smart-pick-title">
@@ -182,7 +204,7 @@ const Library = ({
           )}
         </div>
 
-        <section className="cabinet" aria-label="Tủ board game">
+        <section className="cabinet signature-cabinet" aria-label="Tủ board game">
           <div className="cabinet-glow" aria-hidden="true" />
 
           {shelves.map((shelfGames, shelfIndex) => (
@@ -240,7 +262,7 @@ const Library = ({
         isOpen={isFilterSheetOpen}
         onClose={() => setFilterSheetOpen(false)}
         filter={filter}
-        onFilterChange={onFilterChange}
+        onFilterChange={updateFilter}
       />
 
       <GameRecommenderSheet
@@ -252,6 +274,13 @@ const Library = ({
         onSelectGame={onSelectGame}
         tableCode={tableCode}
         submitUrl={operationalUrl}
+      />
+
+      <WaitlistSheet
+        isOpen={isWaitlistOpen}
+        onClose={() => setWaitlistOpen(false)}
+        submitUrl={operationalUrl}
+        pollIntervalMs={APP_CONFIG?.waitlist?.pollIntervalMs}
       />
     </main>
   );

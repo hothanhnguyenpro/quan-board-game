@@ -9,7 +9,7 @@
  */
 
 const CACHE_PREFIX = 'noburi-pwa-';
-const CACHE_VERSION = 'v1';
+const CACHE_VERSION = 'v3';
 const SHELL_CACHE = `${CACHE_PREFIX}shell-${CACHE_VERSION}`;
 const RUNTIME_CACHE = `${CACHE_PREFIX}runtime-${CACHE_VERSION}`;
 const IMAGE_CACHE = `${CACHE_PREFIX}images-${CACHE_VERSION}`;
@@ -45,6 +45,7 @@ const SENSITIVE_URL_TERMS = [
   'status',
   'checkin',
   'check-in',
+  'ticket',
   'admin',
 ];
 

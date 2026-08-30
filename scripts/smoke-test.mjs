@@ -15,6 +15,7 @@ import {
   parseDurationRangeMinutes,
   recommendGames,
 } from '../src/utils/gameRecommender.js';
+import { normalizeMeetup } from '../src/utils/meetupFetcher.js';
 
 const playerCases = [
   ['1-4', 'Nhóm đông', false],
@@ -56,6 +57,14 @@ assert.equal(localDate.getDate(), 29);
 assert.equal(parseLocalDate('31/02/2026 19:00'), null);
 assert.equal(parseLocalDate('29/08/2026 19:00:30')?.getSeconds(), 30);
 assert.equal(parseLocalDate('08/29/2026 19:00:00')?.getDate(), 29);
+
+const meetupWithLeader = normalizeMeetup({
+  id: 'meetup-leader-test',
+  gameId: 'splendor',
+  'Tên Leader': 'Nguyên',
+  startTime: '29/08/2026 19:00',
+});
+assert.equal(meetupWithLeader.leaderName, 'Nguyên');
 
 const reference = new Date(2026, 7, 27, 12, 0, 0);
 const { start, end } = getCurrentWeekRange(reference);
