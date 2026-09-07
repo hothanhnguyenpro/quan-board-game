@@ -31,6 +31,7 @@ const MeetupSheet = ({
   error = '',
   onRetry,
   onRegistrationSuccess,
+  onViewRules,
 }) => {
   const config = APP_CONFIG?.meetup || {};
   const registrationConfig = config.registration || {};
@@ -257,6 +258,7 @@ const MeetupSheet = ({
                         registrationEnabled={registrationConfig.enabled === true}
                         registerLabel={registrationConfig.openButtonText || 'Đăng ký'}
                         onRegister={openRegistration}
+                        onViewRules={onViewRules}
                       />
                     ))}
                   </div>

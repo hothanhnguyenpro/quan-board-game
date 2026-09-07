@@ -196,6 +196,8 @@ Production build tự đăng ký `public/sw.js`. Chính sách cache:
 
 Vì vậy khách cần mở ứng dụng online thành công ít nhất một lần trước khi dùng ngoại tuyến. Khi mất mạng, app hiển thị nhãn **Đang ngoại tuyến** và dùng snapshot gần nhất để mở Cheat Sheet.
 
+Cheat Sheet biên soạn chuyên sâu được đặt trong `src/data/cheatSheets.js`, tách khỏi Sheet danh mục để không làm hàng CSV ngày càng dài và khó sửa. Game đã có nội dung chuyên sâu dùng các dòng `<details>/<summary>` độc lập: tại một thời điểm chỉ mở một luật, mỗi dòng có tóm tắt, chi tiết chuẩn luật, thematic logic, câu nhớ nhanh và cảnh báo dễ quên. Game chưa được biên soạn tiếp tục dùng dữ liệu `winCondition`, `turnSteps`, `scoring`, `tricks` cũ nên có thể nâng cấp lần lượt mà không làm hỏng nội dung hiện tại.
+
 ## 8. QR check-in và dashboard
 
 Sau đăng ký thành công, khách nhận QR cùng mã chữ dự phòng 6 ký tự, ví dụ `K7M4Q2`. Bảng chữ cái bỏ `0/O` và `1/I` để leader dễ đọc, nhập tay. Vé khách không có nút check-in. QR chứa deep link bảo vệ tới dashboard dạng `<URL_EXEC>?view=admin&checkin=K7M4Q2`: camera điện thoại mở đúng dashboard và điền sẵn mã, nhưng chỉ phiên nhân viên đã đăng nhập mới được gọi hàm check-in nên khách không thể tự xác nhận. Không dùng tham số `c` hoặc `sid` vì đây là tên dành riêng khiến Google Apps Script trả HTTP 400 trước khi `doGet` chạy. Nhân viên cũng có thể mở trực tiếp:
@@ -227,6 +229,8 @@ Trong mỗi Cheat Sheet, **Công cụ trong ván** chạy độc lập bằng lo
 src/
   App.jsx
   config.js
+  data/
+    cheatSheets.js
   hooks/
     useModalBehavior.js
     useTableContext.js

@@ -16,6 +16,7 @@ import {
   recommendGames,
 } from '../src/utils/gameRecommender.js';
 import { normalizeMeetup } from '../src/utils/meetupFetcher.js';
+import { getGameCheatSheet } from '../src/data/cheatSheets.js';
 
 const playerCases = [
   ['1-4', 'Nhóm đông', false],
@@ -139,5 +140,19 @@ assert.deepEqual(
   secondRecommendations.map((item) => item.game.id)
 );
 assert.deepEqual(recommenderGames, recommenderSnapshot);
+
+const brassGuide = getGameCheatSheet({ name: 'Brass: Birmingham' });
+assert.ok(brassGuide, 'Brass: Birmingham phải có Cheat Sheet chi tiết');
+assert.match(brassGuide.objective, /VP/i);
+
+const brassItems = brassGuide.sections.flatMap((section) => section.items);
+const brassItemIds = brassItems.map((item) => item.id);
+assert.equal(new Set(brassItemIds).size, brassItemIds.length);
+assert.ok(brassItems.every((item) => item.title && item.summary));
+assert.ok(brassItems.every((item) => item.rules?.length && item.logic));
+assert.match(brassItems.find((item) => item.id === 'coal')?.logic || '', /nặng/i);
+assert.match(brassItems.find((item) => item.id === 'iron')?.logic || '', /xe ngựa/i);
+assert.match(brassItems.find((item) => item.id === 'win')?.warning || '', /không áp dụng/i);
+assert.equal(getGameCheatSheet({ name: 'Splendor' }), null);
 
 console.log('Logic smoke tests: PASS');

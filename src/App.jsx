@@ -28,6 +28,7 @@ const App = () => {
   const [gamesWarning, setGamesWarning] = useState('');
   const [filter, setFilter] = useState({});
   const [selectedGame, setSelectedGame] = useState(null);
+  const [cheatSheetOrigin, setCheatSheetOrigin] = useState('library');
   const [recommendationPreferences, setRecommendationPreferences] = useState({
     players: 4,
     durationMinutes: 60,
@@ -113,12 +114,28 @@ const App = () => {
 
   const handleSelectGame = useCallback((game) => {
     if (!game) return;
+    setCheatSheetOrigin('library');
     setSelectedGame(game);
     scrollToTop('smooth');
   }, []);
 
-  const handleBackToLibrary = useCallback(() => {
+  const handleBackFromCheatSheet = useCallback(() => {
     setSelectedGame(null);
+    scrollToTop('auto');
+
+    if (cheatSheetOrigin === 'meetup') {
+      setMeetupOpen(true);
+    }
+
+    setCheatSheetOrigin('library');
+  }, [cheatSheetOrigin]);
+
+  const handleViewMeetupRules = useCallback((game) => {
+    if (!game) return;
+
+    setCheatSheetOrigin('meetup');
+    setMeetupOpen(false);
+    setSelectedGame(game);
     scrollToTop('auto');
   }, []);
 
@@ -205,7 +222,8 @@ const App = () => {
       {selectedGame ? (
         <CheatSheet
           game={selectedGame}
-          onBack={handleBackToLibrary}
+          onBack={handleBackFromCheatSheet}
+          backLabel={cheatSheetOrigin === 'meetup' ? 'Danh sách tụ' : 'Tủ game'}
         />
       ) : (
         <Library
@@ -229,6 +247,7 @@ const App = () => {
         error={meetupsError}
         onRetry={retryMeetups}
         onRegistrationSuccess={handleRegistrationSuccess}
+        onViewRules={handleViewMeetupRules}
       />
 
       <AnnouncementModal onOpenMeetup={openMeetup} />

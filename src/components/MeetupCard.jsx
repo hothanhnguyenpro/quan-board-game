@@ -1,4 +1,5 @@
 import {
+  BookOpenText,
   CalendarDays,
   Clock3,
   DoorOpen,
@@ -36,6 +37,7 @@ const MeetupCard = ({
   registrationEnabled,
   registerLabel = 'Đăng ký',
   onRegister,
+  onViewRules,
 }) => {
   const { game, date } = meetup;
   const status = meetup.status || 'closed';
@@ -111,14 +113,25 @@ const MeetupCard = ({
 
         {meetup.note && <p className="meetup-note">{meetup.note}</p>}
 
-        <button
-          type="button"
-          className="meetup-register"
-          disabled={!canRegister}
-          onClick={() => onRegister?.(meetup)}
-        >
-          {canRegister ? registerLabel : statusLabel}
-        </button>
+        <div className="meetup-card-actions">
+          <button
+            type="button"
+            className="meetup-rules"
+            onClick={() => onViewRules?.(game)}
+          >
+            <BookOpenText size={16} aria-hidden="true" />
+            Xem thử luật
+          </button>
+
+          <button
+            type="button"
+            className="meetup-register"
+            disabled={!canRegister}
+            onClick={() => onRegister?.(meetup)}
+          >
+            {canRegister ? registerLabel : statusLabel}
+          </button>
+        </div>
       </div>
     </article>
   );

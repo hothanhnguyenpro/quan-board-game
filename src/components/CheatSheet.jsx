@@ -1,8 +1,11 @@
 import { useState } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import {
+  AlertTriangle,
   ArrowLeft,
+  Brain,
   Calculator,
+  ChevronDown,
   Clock3,
   Lightbulb,
   ListChecks,
@@ -13,6 +16,7 @@ import {
 } from 'lucide-react';
 
 import { APP_CONFIG } from '../config.js';
+import { getGameCheatSheet } from '../data/cheatSheets.js';
 import GameCompanionSheet from './GameCompanionSheet.jsx';
 
 const toList = (value) => {
@@ -88,15 +92,140 @@ const GameCover = ({ game }) => {
   );
 };
 
-const CheatSheet = ({ game, onBack }) => {
+const RuleAccordion = ({ item, isOpen, onToggle }) => {
+  const contentId = `rule-content-${item.id}`;
+
+  return (
+    <details className="rule-accordion" open={isOpen}>
+      <summary
+        className="rule-accordion-summary"
+        aria-controls={contentId}
+        aria-expanded={isOpen}
+        onClick={(event) => {
+          event.preventDefault();
+          onToggle(item.id);
+        }}
+      >
+        <span className="rule-accordion-emoji" aria-hidden="true">
+          {item.icon || '⚡'}
+        </span>
+        <span className="rule-accordion-label">
+          <strong>{item.title}</strong>
+          <span>{item.summary}</span>
+        </span>
+        <ChevronDown
+          className="rule-accordion-chevron"
+          size={20}
+          aria-hidden="true"
+        />
+      </summary>
+
+      <div id={contentId} className="rule-accordion-content">
+        <div className="rule-detail-block">
+          <h3>
+            <ListChecks size={18} aria-hidden="true" />
+            Chi tiết luật
+          </h3>
+          <ul>
+            {(item.rules || []).map((rule, index) => (
+              <li key={`${item.id}-rule-${index}`}>{rule}</li>
+            ))}
+          </ul>
+        </div>
+
+        <div className="rule-logic-block">
+          <h3>
+            <Brain size={18} aria-hidden="true" />
+            Tại sao lại thế?
+          </h3>
+          <p>{item.logic}</p>
+        </div>
+
+        {item.memory && (
+          <p className="rule-memory-line">
+            <span aria-hidden="true">🧠</span>
+            {item.memory}
+          </p>
+        )}
+
+        {item.warning && (
+          <p className="rule-warning">
+            <AlertTriangle size={17} aria-hidden="true" />
+            <span>
+              <strong>Dễ quên:</strong> {item.warning}
+            </span>
+          </p>
+        )}
+      </div>
+    </details>
+  );
+};
+
+const LegacyCheatSheet = ({ game, turnSteps, scoring, tricks }) => (
+  <>
+    <Section icon={<Trophy size={20} />} title="Cách thắng" tone="gold">
+      <p className="guide-main-text">
+        {game.winCondition || 'Chưa có thông tin.'}
+      </p>
+    </Section>
+
+    <Section icon={<ListChecks size={20} />} title="Lượt của bạn" tone="blue">
+      {turnSteps.length ? (
+        <div className="step-list">
+          {turnSteps.map((step, index) => (
+            <div key={`${index}-${step}`} className="step-item">
+              <span className="step-number">{index + 1}</span>
+              <p>{step}</p>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p className="guide-muted">Chưa có thông tin lượt chơi.</p>
+      )}
+    </Section>
+
+    <Section icon={<Calculator size={20} />} title="Tính điểm" tone="green">
+      {scoring.length ? (
+        <div className="bullet-list">
+          {scoring.map((item, index) => (
+            <div key={`${index}-${item}`} className="bullet-item">
+              <span>✓</span>
+              <p>{item}</p>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p className="guide-muted">Chưa có thông tin tính điểm.</p>
+      )}
+    </Section>
+
+    <Section icon={<Lightbulb size={20} />} title="Mẹo & lưu ý" tone="red">
+      {tricks.length ? (
+        <div className="bullet-list">
+          {tricks.map((item, index) => (
+            <div key={`${index}-${item}`} className="bullet-item">
+              <span>💡</span>
+              <p>{item}</p>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p className="guide-muted">Chưa có mẹo nào.</p>
+      )}
+    </Section>
+  </>
+);
+
+const CheatSheet = ({ game, onBack, backLabel = 'Tủ game' }) => {
   const reduceMotion = useReducedMotion();
   const [isCompanionOpen, setCompanionOpen] = useState(false);
+  const [openRuleId, setOpenRuleId] = useState(null);
   if (!game) {
     return (
       <div className="app-state">
         <h1>Không tìm thấy game</h1>
         <button type="button" className="state-button" onClick={onBack}>
-          Quay lại tủ game
+          Quay lại {backLabel.toLowerCase()}
         </button>
       </div>
     );
@@ -105,6 +234,7 @@ const CheatSheet = ({ game, onBack }) => {
   const turnSteps = toList(game.turnSteps);
   const scoring = toList(game.scoring);
   const tricks = toList(game.tricks);
+  const detailedGuide = getGameCheatSheet(game);
 
   return (
     <main className="guide-page">
@@ -112,9 +242,9 @@ const CheatSheet = ({ game, onBack }) => {
         <header className="guide-topbar">
           <button type="button" onClick={onBack} className="back-button">
             <ArrowLeft size={19} />
-            Tủ game
+            {backLabel}
           </button>
-          <span className="guide-topbar-label">CHEAT SHEET</span>
+          <span className="guide-topbar-label">LUẬT NHANH</span>
         </header>
 
         <section className="guide-hero">
@@ -167,68 +297,59 @@ const CheatSheet = ({ game, onBack }) => {
             animate={{ opacity: 1, y: 0 }}
             transition={reduceMotion ? { duration: 0 } : { duration: 0.3 }}
           >
-            <Section icon={<Trophy size={20} />} title="Cách thắng" tone="gold">
-              <p className="guide-main-text">
-                {game.winCondition || 'Chưa có thông tin.'}
-              </p>
-            </Section>
+            {detailedGuide ? (
+              <>
+                <Section
+                  icon={<Sparkles size={20} />}
+                  title="Không khí và cái hay của trò chơi"
+                  tone="gold"
+                >
+                  <p className="guide-main-text">{detailedGuide.intro}</p>
+                  <p className="guide-memory-banner">
+                    {detailedGuide.memoryLine}
+                  </p>
+                </Section>
 
-            <Section
-              icon={<ListChecks size={20} />}
-              title="Lượt của bạn"
-              tone="blue"
-            >
-              {turnSteps.length ? (
-                <div className="step-list">
-                  {turnSteps.map((step, index) => (
-                    <div key={`${index}-${step}`} className="step-item">
-                      <span className="step-number">{index + 1}</span>
-                      <p>{step}</p>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="guide-muted">Chưa có thông tin lượt chơi.</p>
-              )}
-            </Section>
+                <Section
+                  icon={<Trophy size={20} />}
+                  title="Mục tiêu chiến thắng"
+                  tone="green"
+                >
+                  <p className="guide-main-text">{detailedGuide.objective}</p>
+                </Section>
 
-            <Section
-              icon={<Calculator size={20} />}
-              title="Tính điểm"
-              tone="green"
-            >
-              {scoring.length ? (
-                <div className="bullet-list">
-                  {scoring.map((item, index) => (
-                    <div key={`${index}-${item}`} className="bullet-item">
-                      <span>✓</span>
-                      <p>{item}</p>
+                {detailedGuide.sections.map((section) => (
+                  <Section
+                    key={section.id}
+                    icon={<ListChecks size={20} />}
+                    title={section.title}
+                    tone={section.tone}
+                  >
+                    <div className="rule-accordion-list">
+                      {section.items.map((item) => (
+                        <RuleAccordion
+                          key={item.id}
+                          item={item}
+                          isOpen={openRuleId === item.id}
+                          onToggle={(itemId) =>
+                            setOpenRuleId((current) =>
+                              current === itemId ? null : itemId
+                            )
+                          }
+                        />
+                      ))}
                     </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="guide-muted">Chưa có thông tin tính điểm.</p>
-              )}
-            </Section>
-
-            <Section
-              icon={<Lightbulb size={20} />}
-              title="Mẹo & lưu ý"
-              tone="red"
-            >
-              {tricks.length ? (
-                <div className="bullet-list">
-                  {tricks.map((item, index) => (
-                    <div key={`${index}-${item}`} className="bullet-item">
-                      <span>💡</span>
-                      <p>{item}</p>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="guide-muted">Chưa có mẹo nào.</p>
-              )}
-            </Section>
+                  </Section>
+                ))}
+              </>
+            ) : (
+              <LegacyCheatSheet
+                game={game}
+                turnSteps={turnSteps}
+                scoring={scoring}
+                tricks={tricks}
+              />
+            )}
           </motion.div>
         </div>
       </div>
